@@ -1,26 +1,66 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* 1. Define your Custom Colors so they work with utilities (bg-snow, text-jet, etc.) */
+  --color-snow: #F8F8F8;
+  --color-jet: #202C39;
+  --color-gold: #C5A059; /* Adjust to your specific gold hex */
+  --color-ivory: #F2F0EA;
+
+  /* 2. Map your Fonts to Tailwind classes (font-display, font-body) */
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "DM Sans", "Helvetica Neue", sans-serif;
+
+  /* 3. Add a dedicated breakpoint for 27" / Ultra-wide monitors */
+  --breakpoint-3xl: 1920px;
+  --breakpoint-4k: 2560px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-body);
+    background-color: var(--color-snow);
+    color: var(--color-jet);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* FIXED INNER WRAPPER:
+     Instead of just huge padding, we use max-width + mx-auto.
+     This ensures that on a 27" monitor, the content stays centered 
+     and doesn't get "clamped" or excessively wide.
+  */
+  .inner {
+    width: 100%;
+    margin-inline: auto;
+    /* Balanced padding: enough for mobile, but caps out on desktop */
+    padding-inline: clamp(1.5rem, 5vw, 4rem); 
+    /* The "sweet spot" for high-end web layouts is 1440px - 1800px */
+    max-width: 1800px;
+  }
+
+  /* If you want those side "pillars" from your image to be responsive */
+  .layout-grid {
+    display: grid;
+    grid-template-columns: 1fr minmax(auto, 1800px) 1fr;
+  }
+}
+
+/* --- Keep your existing animations and scrollbars --- */
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.animate-marquee { animation: marquee-scroll 28s linear infinite; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--color-snow); }
+::-webkit-scrollbar-thumb { 
+  background: #E6E6FA; 
+  border-radius: 3px; 
 }
