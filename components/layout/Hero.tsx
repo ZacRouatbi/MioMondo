@@ -5,10 +5,7 @@ export default function Hero() {
       The image bleeds edge-to-edge. Text uses .inner padding
       so it lines up with every other section on large screens.
     */
-    <section
-      className="relative w-full overflow-hidden bg-snow"
-      style={{ height: "clamp(500px, 65vw, 820px)" }}
-    >
+    <section className="relative w-full overflow-hidden bg-snow h-[91dvh]">
       {/* Full-bleed photo */}
       <img
         src="https://images.unsplash.com/photo-1567016376408-0226e4d0c1ea?w=2400&q=85"
@@ -27,25 +24,16 @@ export default function Hero() {
 
       {/* Text */}
       <div className="inner relative z-10 h-full flex flex-col justify-center">
-        <p
-          className="uppercase text-jet opacity-45 mb-6"
-          style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.24em" }}
-        >
-          Collection 2025
+        <p className="uppercase text-jet opacity-45 mb-6 text-[11px] font-semibold tracking-[0.24em]">
+          Collection 2026
         </p>
 
         <h1
-          className="text-jet leading-[1.06] mb-8"
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "clamp(2.6rem, 5.5vw, 6rem)",
-            fontWeight: 400,
-            maxWidth: "12ch",
-          }}
+          className="text-jet leading-[1.06] mb-8 font-[family-name:var(--font-display)] text-[clamp(2.6rem,5.5vw,6rem)] font-normal max-w-[12ch]"
         >
           Bring the Mio&nbsp;Mondo
           <br />
-          <em style={{ fontStyle: "italic", fontWeight: 300 }}>experience</em> home
+          <em className="italic font-light">experience</em> home
         </h1>
 
         <div className="flex flex-wrap gap-4">

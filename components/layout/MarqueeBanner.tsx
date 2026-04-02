@@ -8,7 +8,7 @@ const ITEMS = [
 
 export default function MarqueeBanner() {
   return (
-    <div className="bg-jet text-gold overflow-hidden py-[10px]">
+    <div className="bg-jet text-gold overflow-hidden py-[8px]">
       <div className="flex gap-16 whitespace-nowrap w-max animate-marquee">
         {[...ITEMS, ...ITEMS].map((item, i) => (
           <span key={i} className="text-[11px] font-semibold tracking-[.15em] uppercase">

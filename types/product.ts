@@ -5,7 +5,9 @@ export interface Product {
   price: string;
   regular_price: string;
   sale_price: string;
-  images: { src: string; alt: string }[];
+  price_html: string;
+  // Updated to match the flat string in your console
+  image: string | null; 
   categories: { id: number; name: string; slug: string }[];
   short_description: string;
   on_sale: boolean;
@@ -42,4 +44,8 @@ export interface WooCommerceCategory {
   } | null;
   menu_order: number;
   count: number;
+}
+export interface Props {
+  product: Product;
+  variant?: "default" | "light";
 }

@@ -4,7 +4,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const per_page = searchParams.get('per_page') || '20';
   
-  // CRITICAL: Ensure this path includes /wc/v3/products/categories
+
   const wcUrl = `${process.env.WC_URL}/wp-json/wc/v3/products/categories`;
   
   const auth = Buffer.from(`${process.env.WC_KEY}:${process.env.WC_SECRET}`).toString('base64');

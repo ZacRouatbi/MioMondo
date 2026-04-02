@@ -1,11 +1,5 @@
 import { Product, Category } from "@/types/product";
 
-export const fetchBestsellers = async (): Promise<Product[]> => {
-  const res = await fetch("/api/products?featured=true&per_page=8&orderby=popularity");
-  if (!res.ok) throw new Error("Failed to fetch bestsellers");
-  return res.json();
-};
-
 export const fetchNewArrivals = async (): Promise<Product[]> => {
   const res = await fetch("/api/products?orderby=date&order=desc&per_page=8");
   if (!res.ok) throw new Error("Failed to fetch new arrivals");

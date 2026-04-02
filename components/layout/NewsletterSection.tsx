@@ -1,80 +1,80 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 
 export default function NewsletterSection() {
-  const [email,     setEmail]     = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [error,     setError]     = useState("");
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.includes("@")) { setError("Please enter a valid email address."); return; }
-    setError("");
-    setSubmitted(true);
+    if (!email.includes("@")) {
+      setStatus("error");
+      setMessage("Please enter a valid email.");
+      return;
+    }
+
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+
+      if (res.ok) {
+        setStatus("success");
+      } else {
+        const data = await res.json();
+        setStatus("error");
+        setMessage(data.error || "Please try a different email.");
+      }
+    } catch {
+      setStatus("error");
+      setMessage("Service unavailable. Try again later.");
+    }
   };
 
   return (
-    <section className="bg-jet text-center" style={{ padding: "clamp(4rem, 8vw, 8rem) 0" }}>
-      <div className="inner flex flex-col items-center">
-
-        <p
-          className="text-gold uppercase mb-5"
-          style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.22em" }}
-        >
-          ✦ Stay Inspired
+    <section className="bg-[#202C39] py-20 px-4">
+      <div className="max-w-4xl mx-auto text-center">
+        <p className="text-[#FFCA68] uppercase text-[11px] font-bold tracking-[0.3em] mb-6">
+          ✦ Mio Mondo Club
         </p>
-
-        <h2
-          className="text-snow leading-[1.1] mb-4"
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "clamp(2.2rem, 4vw, 4rem)",
-            fontWeight: 300,
-          }}
-        >
-          Join the Mio Mondo<br />community
+        
+        <h2 className="text-white text-4xl md:text-5xl font-light mb-6" style={{ fontFamily: 'var(--font-display)' }}>
+          Design inspiration, <br className="hidden md:block" /> delivered.
         </h2>
 
-        <p
-          className="text-snow opacity-50 leading-[1.7] mb-10"
-          style={{ fontSize: "clamp(14px,1.1vw,17px)", maxWidth: "42ch" }}
-        >
-          New collections, décor tips, and exclusive offers — straight to your inbox.
-        </p>
-
-        {submitted ? (
-          <p
-            className="text-gold"
-            style={{ fontFamily: "var(--font-display)", fontSize: "clamp(20px,1.8vw,26px)" }}
-          >
-            ✓ You&rsquo;re in! Welcome to Mio Mondo.
-          </p>
+        {status === "success" ? (
+          <div className="flex flex-col items-center gap-3 animate-in fade-in slide-in-from-bottom-4">
+            <CheckCircle2 className="text-[#FFCA68]" size={40} strokeWidth={1} />
+            <p className="text-white text-xl font-light">Please check your inbox to confirm.</p>
+          </div>
         ) : (
-          <>
-            <form
-              onSubmit={handleSubmit}
-              noValidate
-              className="flex w-full max-w-[520px] rounded-lg overflow-hidden shadow-[0_4px_32px_rgba(0,0,0,.25)]"
-            >
+          <form onSubmit={handleSubmit} className="mt-10 max-w-lg mx-auto relative">
+            <div className="flex flex-col md:flex-row gap-0 rounded-xl overflow-hidden shadow-2xl">
               <input
                 type="email"
-                placeholder="Your email address"
+                placeholder="Email Address"
                 value={email}
-                onChange={e => { setEmail(e.target.value); setError(""); }}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1 bg-white/5 border border-white/10 px-6 py-4 text-white outline-none focus:bg-white/10 transition-all"
                 required
-                className="flex-1 px-6 py-4 bg-white/10 border border-white/15 border-r-0 text-snow placeholder:text-snow/40 outline-none focus:border-gold transition-colors duration-200 text-[14px] rounded-l-lg"
-                style={{ fontFamily: "var(--font-body)" }}
               />
               <button
                 type="submit"
-                className="bg-gold text-jet px-8 py-4 text-[12px] font-bold tracking-[.1em] uppercase transition-colors duration-200 hover:bg-[#ffd980] whitespace-nowrap border-0 cursor-pointer rounded-r-lg"
+                disabled={status === "loading"}
+                className="bg-[#FFCA68] text-[#202C39] px-8 py-4 font-bold uppercase text-[12px] tracking-widest hover:bg-[#ffd980] transition-colors disabled:opacity-50"
               >
-                Subscribe
+                {status === "loading" ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Join Us"}
               </button>
-            </form>
-            {error && <p className="text-red-400 text-[13px] mt-3">{error}</p>}
-          </>
+            </div>
+            {status === "error" && (
+              <p className="absolute -bottom-8 left-0 text-red-400 text-sm">{message}</p>
+            )}
+          </form>
         )}
       </div>
     </section>

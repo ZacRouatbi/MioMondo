@@ -76,7 +76,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="flex flex-wrap items-center justify-between gap-4 py-6">
           <p className="text-snow opacity-25" style={{ fontSize: 12 }}>
-            © 2025 Mio Mondo Home. All rights reserved.
+            © 2026 Mio Mondo Home. All rights reserved.
           </p>
           <div className="flex gap-6">
             {["Facebook", "Instagram", "TikTok", "Pinterest"].map(s => (

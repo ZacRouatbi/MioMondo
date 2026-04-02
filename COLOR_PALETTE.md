@@ -7,7 +7,7 @@ Primary Colors:
 ├── Light Gray/Off-white:  #F8F8F8  (RGB: 248, 248, 248)
 ├── Light Lavender:        #E6E6FA  (RGB: 230, 230, 250)
 ├── Gold/Amber:            #FFCA68  (RGB: 255, 202, 104)
-└── Dark Navy Blue:        #373737  
+└── Dark Navy Blue:        # bg-jet
 ```
 
 ## Usage Guidelines
