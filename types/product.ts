@@ -6,7 +6,8 @@ export interface Product {
   regular_price: string;
   sale_price: string;
   price_html: string;
-  // Updated to match the flat string in your console
+  stock_status: "instock" | "outofstock" | "onbackorder";
+  sku: string;
   image: string | null; 
   categories: { id: number; name: string; slug: string }[];
   short_description: string;
@@ -28,24 +29,25 @@ export interface Category {
 }
 
 // This helps your API route understand what WP is sending back
-export interface WooCommerceCategory {
+ export type WCRawProduct = {
   id: number;
   name: string;
   slug: string;
-  parent: number;
-  description: string;
-  display: string;
-  image: {
-    id: number;
-    date_created: string;
-    src: string;
-    name: string;
-    alt: string;
-  } | null;
-  menu_order: number;
-  count: number;
-}
+  sku: string;
+  price: string;
+  regular_price: string;
+  sale_price: string;
+  price_html: string;
+  on_sale: boolean;
+  featured: boolean;
+  short_description: string;
+  stock_status: "instock" | "outofstock" | "onbackorder";
+  images: { id: number; src: string; alt: string }[];
+  categories: { id: number; name: string; slug: string }[];
+};
 export interface Props {
   product: Product;
+  inCart?: boolean;
+  onAddToCart?: () => void;
   variant?: "default" | "light";
 }

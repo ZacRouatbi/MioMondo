@@ -8,7 +8,7 @@ export default function Hero() {
     <section className="relative w-full overflow-hidden bg-snow h-[91dvh]">
       {/* Full-bleed photo */}
       <img
-        src="https://images.unsplash.com/photo-1567016376408-0226e4d0c1ea?w=2400&q=85"
+        src="/heroImage.jpg"
         alt="Mio Mondo Home — interior lifestyle"
         className="absolute inset-0 w-full h-full object-cover object-center"
       />

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
         'Authorization': `Basic ${auth}`,
         'Content-Type': 'application/json',
       },
-      cache: 'no-store'
+      next: { revalidate: 3600 },
     });
 
     const data = await response.json();

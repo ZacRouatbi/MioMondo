@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import AuthModal from "./../ui/auth/AuthModal";
 import SearchModal from "./../ui/SearchModal";
 import UserDropdown from "./../ui/auth/UserDropdown";
 import { useUser } from "@/hooks/useUser";
+import { useCartContext } from "../cart/CartContext";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -17,15 +18,17 @@ const NAV_LINKS = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  
+
   // Modals & Dropdown State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  
+
   const { data: session } = useUser();
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const cartCount = 2;
+
+  // ── Cart count from context ──────────────────────────────────────────────
+  const { itemCount } = useCartContext();
 
   // 1. Handle scroll effect
   useEffect(() => {
@@ -71,13 +74,13 @@ export default function Navbar() {
       >
         <div className="inner">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center h-72px">
-          
+
             {/* ── Left: Desktop Nav ── */}
             <nav className="flex items-center">
               <div className="hidden md:flex items-center gap-8 xl:gap-12">
                 {NAV_LINKS.map(l => (
-                  <a 
-                    key={l.label} 
+                  <a
+                    key={l.label}
                     href={l.href}
                     className="relative py-1 h-fit text-[13px] text-jet opacity-70 hover:opacity-100 transition-all duration-300 group"
                   >
@@ -116,8 +119,8 @@ export default function Navbar() {
 
             {/* ── Right: Icons ── */}
             <div className="flex items-center justify-end gap-5 xl:gap-7">
-              
-              <button 
+
+              <button
                 onClick={() => setIsSearchModalOpen(true)}
                 className="flex items-center justify-center w-8 h-8 flex-shrink-0 text-jet opacity-60 hover:text-[#FFCA68] hover:opacity-100 transition-all duration-300 hover:scale-110 outline-none"
                 aria-label="Search"
@@ -126,28 +129,19 @@ export default function Navbar() {
                   <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
                 </svg>
               </button>
-              
+
               {/* Account / Profile Trigger */}
               <div className="relative flex-shrink-0" ref={dropdownRef}>
-                <button 
+                <button
                   onClick={handleAccountClick}
                   className={`flex items-center justify-center w-8 h-8 flex-shrink-0 transition-all duration-300 hover:scale-110 outline-none ${
-                    session?.authenticated 
-                      ? "text-[#FFCA68] opacity-100" 
+                    session?.authenticated
+                      ? "text-[#FFCA68] opacity-100"
                       : "text-jet opacity-60 hover:text-[#FFCA68] hover:opacity-100"
                   }`}
                   aria-label="Account"
                 >
-                  <svg 
-                    width="20" 
-                    height="20" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="1.5" 
-                    strokeLinecap="round"
-                    className="w-5 h-5 aspect-square flex-shrink-0" 
-                  >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-5 h-5 aspect-square flex-shrink-0">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                     <circle cx="12" cy="7" r="4" />
                   </svg>
@@ -155,23 +149,30 @@ export default function Navbar() {
 
                 <AnimatePresence>
                   {isProfileOpen && session?.user && (
-                    <UserDropdown 
-                      user={session.user} 
-                      onLogout={handleLogout} 
+                    <UserDropdown
+                      user={session.user}
+                      onLogout={handleLogout}
                     />
                   )}
                 </AnimatePresence>
               </div>
 
-              <a href="/cart" className="relative flex items-center justify-center w-8 h-8 flex-shrink-0 text-jet opacity-60 hover:text-[#FFCA68] hover:opacity-100 transition-all duration-300 hover:scale-110">
+              {/* ── Cart icon with live count ── */}
+              <a
+                href="/cart"
+                className="relative flex items-center justify-center w-8 h-8 flex-shrink-0 text-jet opacity-60 hover:text-[#FFCA68] hover:opacity-100 transition-all duration-300 hover:scale-110"
+                aria-label={`Cart — ${itemCount} item${itemCount !== 1 ? "s" : ""}`}
+              >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-5 h-5 aspect-square">
                   <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                   <line x1="3" y1="6" x2="21" y2="6" />
                   <path d="M16 10a4 4 0 0 1-8 0" />
                 </svg>
-                {cartCount > 0 && (
+
+                {/* Badge — only renders when cart has items */}
+                {itemCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-[#FFCA68] text-jet text-[9px] font-bold w-[17px] h-[17px] rounded-full flex items-center justify-center shadow-sm">
-                    {cartCount}
+                    {itemCount > 99 ? "99+" : itemCount}
                   </span>
                 )}
               </a>
@@ -184,16 +185,16 @@ export default function Navbar() {
       {/* ── Modals Area ── */}
       <AnimatePresence mode="wait">
         {isSearchModalOpen && (
-          <SearchModal 
-            isOpen={isSearchModalOpen} 
-            onClose={() => setIsSearchModalOpen(false)} 
+          <SearchModal
+            isOpen={isSearchModalOpen}
+            onClose={() => setIsSearchModalOpen(false)}
           />
         )}
 
         {isAuthModalOpen && (
-          <AuthModal 
-            isOpen={isAuthModalOpen} 
-            onClose={() => setIsAuthModalOpen(false)} 
+          <AuthModal
+            isOpen={isAuthModalOpen}
+            onClose={() => setIsAuthModalOpen(false)}
           />
         )}
       </AnimatePresence>
@@ -208,34 +209,35 @@ export default function Navbar() {
           onClick={() => setMobileOpen(false)}
           className="self-end text-[24px] text-jet opacity-50 hover:text-[#FFCA68] transition-colors"
         >✕</button>
+
         {NAV_LINKS.map((l, i) => (
-          <a 
-            key={l.label} 
-            href={l.href} 
+          <a
+            key={l.label}
+            href={l.href}
             onClick={() => setMobileOpen(false)}
             className="text-jet border-b border-[#202C39]/10 pb-6 transition-all hover:pl-4 hover:text-[#FFCA68] hover:border-[#FFCA68]"
-            style={{ 
-              fontFamily: "var(--font-display)", 
-              fontSize: "clamp(28px,6vw,40px)", 
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "clamp(28px,6vw,40px)",
               fontWeight: 400,
-              transitionDelay: `${i * 50}ms` 
+              transitionDelay: `${i * 50}ms`,
             }}
           >
             {l.label}
           </a>
         ))}
-        
+
         {session?.authenticated && (
-           <div className="mt-auto p-6 bg-lavender/30 rounded-2xl">
-             <p className="text-[10px] uppercase tracking-widest text-jet/40 font-bold mb-1">Logged in as</p>
-             <p className="text-jet font-medium mb-4 truncate">{session.user.email}</p>
-             <button 
+          <div className="mt-auto p-6 bg-lavender/30 rounded-2xl">
+            <p className="text-[10px] uppercase tracking-widest text-jet/40 font-bold mb-1">Logged in as</p>
+            <p className="text-jet font-medium mb-4 truncate">{session.user.email}</p>
+            <button
               onClick={handleLogout}
               className="text-sm font-bold text-[#FFCA68] underline underline-offset-4"
-             >
-               Sign Out
-             </button>
-           </div>
+            >
+              Sign Out
+            </button>
+          </div>
         )}
       </div>
     </>

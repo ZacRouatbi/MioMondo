@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Providers from "./providers";
 // import Navbar from "@/components/Navbar"; // Assuming your Navbar is here
-
+import { CartProvider } from "@/components/cart/CartContext";
 export const metadata: Metadata = {
   title: "Mio Mondo Home — Décoration Intérieure",
   description: "Votre boutique de décoration intérieure à Sousse. Collections exclusives, livraison Tunisie.",
@@ -33,7 +33,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* <Navbar /> */}
           
           <main>
+             <CartProvider>
             {children}
+            </CartProvider>
           </main>
           
           {/* <Footer /> */}

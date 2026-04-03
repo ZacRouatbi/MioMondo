@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { addToCart } from "@/lib/api";
+
 import {Props} from "@/types/product";
+import { productToCartItem } from "@/hooks/useProducts";
+import { useCartContext } from "../cart/CartContext";
 
 
-export default function ProductCard({ product, variant = "default" }: Props) {
+export default function ProductCard({ product, variant = "default"}: Props) {
   const [added, setAdded] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const { addItem } = useCartContext();
   const handleAdd = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -17,7 +19,7 @@ export default function ProductCard({ product, variant = "default" }: Props) {
     setLoading(true);
 
     try {
-      await addToCart(product.id);
+      addItem(productToCartItem(product));
       setAdded(true);
       setTimeout(() => setAdded(false), 2200);
     } catch (err) {
@@ -38,8 +40,8 @@ export default function ProductCard({ product, variant = "default" }: Props) {
       {/* Image Wrapper */}
       <div className={`relative aspect-square overflow-hidden ${imgBg}`}>
         <img
-          src={product.images?.[0]?.src || "/placeholder-product.jpg"}
-          alt={product.images?.[0]?.alt || product.name}
+          src={product.image || "/placeholder-product.jpg"}
+          alt={product.name}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           loading="lazy"
         />
