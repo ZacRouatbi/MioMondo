@@ -43,11 +43,11 @@ export default function LifestyleBanner() {
       </div>
 
       {/* Image — fills remaining half */}
-      <div className="overflow-hidden min-h-[300px]">
+     <div className="relative overflow-hidden w-full h-full min-h-[300px] md:min-h-0">
         <img
-          src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1400&q=85"
+          src="/lifestyleBanner.png"
           alt="Mio Mondo lifestyle"
-          className="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.04]"
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-[1.04]"
           loading="lazy"
         />
       </div>
