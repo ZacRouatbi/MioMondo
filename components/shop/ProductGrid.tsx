@@ -3,6 +3,7 @@
 import type { Product } from "@/types/product";
 import ProductCard from "./ProductCard";
 
+
 interface Props {
   products: Product[] | undefined;
   isLoading: boolean;

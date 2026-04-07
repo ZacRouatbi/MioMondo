@@ -52,6 +52,7 @@ export interface Props {
   onAddToCart?: () => void;
   variant?: "default" | "light";
 }
+
 export type SortOption =
   | "menu_order"
   | "popularity"

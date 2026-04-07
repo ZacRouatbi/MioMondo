@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { WCRawProduct } from "@/types/product";
-// Raw WooCommerce product shape
+
 
 
 export async function GET() {

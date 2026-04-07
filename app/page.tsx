@@ -7,8 +7,8 @@ import LifestyleBanner   from "@/components/layout/LifestyleBanner";
 import ValuesStrip       from "@/components/layout/ValuesStrip";
 import NewsletterSection from "@/components/layout/NewsletterSection";
 import Footer            from "@/components/layout/Footer";
-
 export default function HomePage() {
+
   return (
     <>
       <MarqueeBanner />

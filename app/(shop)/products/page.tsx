@@ -16,7 +16,6 @@ import Navbar from "@/components/layout/Navbar";
 import MarqueeBanner from "@/components/layout/MarqueeBanner";
 import CollectionHero from "@/components/shop/CollectionHero";
 import Footer from "@/components/layout/Footer";
-
 const DEFAULT_FILTERS: ProductFilters = {
   categoryIds: [],
   onSaleOnly: false,
@@ -24,12 +23,10 @@ const DEFAULT_FILTERS: ProductFilters = {
   sortBy: "menu_order",
   search: "",
 };
-
 export default function ShopPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Page lives in the URL so it's shareable & survives refresh
   const page = parseInt(searchParams.get("page") ?? "1", 10);
 
   const [filters, setFilters] = useState<ProductFilters>(DEFAULT_FILTERS);

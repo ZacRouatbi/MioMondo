@@ -9,10 +9,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 0, 
+            staleTime: 0,
             gcTime: 1000 * 60 * 5,
-            retry: 1,
-            refetchOnMount: true, 
+            retry: 2,
+            refetchOnMount: "always",
             refetchOnWindowFocus: true,
           },
         },
@@ -20,19 +20,19 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
-    const handlePageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) {
-        queryClient.invalidateQueries();
+    // 🔥 Handle pages restored from bfcache / back-forward navigation
+    const handleNavigation = () => {
+      const navEntries = performance.getEntriesByType("navigation") as PerformanceNavigationTiming[];
+      if (navEntries.length > 0 && navEntries[0].type === "back_forward") {
+        // Reload the page safely to avoid frozen JS / blank screen
+        window.location.reload();
       }
     };
 
-    window.addEventListener("pageshow", handlePageShow);
-    return () => window.removeEventListener("pageshow", handlePageShow);
-  }, [queryClient]);
+    // Some browsers may not report navigation type immediately
+    window.addEventListener("pageshow", handleNavigation);
+    return () => window.removeEventListener("pageshow", handleNavigation);
+  }, []);
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  );
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }

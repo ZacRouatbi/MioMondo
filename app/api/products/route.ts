@@ -16,7 +16,6 @@ async function fetchWooCommerce<T>(
       Authorization: `Basic ${credentials}`,
       "Content-Type": "application/json",
     },
-    next: { revalidate: 60 },
   });
 
   if (!response.ok) {

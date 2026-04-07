@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Providers from "./providers";
 import { CartProvider } from "@/components/cart/CartContext";
+
 export const metadata: Metadata = {
   title: "Mio Mondo Home — Décoration Intérieure",
   description: "Votre boutique de décoration intérieure à Sousse. Collections exclusives, livraison Tunisie.",
@@ -16,7 +17,6 @@ export const viewport: Viewport = {
   themeColor: "#F8F8F8", // Matches your 'snow' background
 };
 
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" suppressHydrationWarning>
@@ -27,7 +27,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Move Providers (QueryClient) to the top level */}
         <Providers>
           <CartProvider>
-            <main>{children}</main>
+            <main>
+              
+              {children}
+              </main>
           </CartProvider>
         </Providers>
       </body>

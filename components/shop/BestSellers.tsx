@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import {useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
@@ -9,7 +9,6 @@ import { fetchBestsellers } from "@/hooks/useBestsellers";
 import { useCartContext } from "@/components/cart/CartContext";
 import { productToCartItem } from "@/hooks/useProducts";
 import type { Product } from "@/types/product";
-
 const PAGE_SIZE = 4;
 
 export default function BestSellers() {
