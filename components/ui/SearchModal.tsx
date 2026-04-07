@@ -63,7 +63,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   }, [onClose]);
 
   if (!isOpen) return null;
-console.log("Search Results:", results);
   return (
     <div className="fixed inset-0 z-[110] flex flex-col items-center justify-center p-6 lg:p-12">
       {/* Backdrop */}

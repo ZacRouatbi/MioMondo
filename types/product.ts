@@ -60,7 +60,6 @@ export type SortOption =
   | "price-desc";
 
 export interface ProductFilters {
-  /** selected category IDs — includes subcategory IDs automatically */
   categoryIds: number[];
   minPrice?: number;
   maxPrice?: number;
@@ -84,4 +83,9 @@ export interface GetProductsParams {
   min_price?: string;
   max_price?: string;
   search?: string;
+}
+export interface ProductsPage {
+  products: Product[];
+  totalPages: number;
+  total: number;
 }

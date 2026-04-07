@@ -9,12 +9,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // 1. Mark data as stale immediately. 
-            // This ensures TanStack always checks the server on mount.
-            staleTime: 5000, 
-            gcTime: 1000 * 60 * 5, // Keep in memory for 5 mins
+            staleTime: 0, 
+            gcTime: 1000 * 60 * 5,
             retry: 1,
-            // 2. This is key for "Back" navigation:
             refetchOnMount: true, 
             refetchOnWindowFocus: true,
           },
@@ -22,11 +19,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       })
   );
 
-
   useEffect(() => {
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted) {
-
         queryClient.invalidateQueries();
       }
     };

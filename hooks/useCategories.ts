@@ -4,9 +4,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Category, CategoryNode } from "@/types/product";
 
-/**
- * 1. Fetcher: Standard WooCommerce Category Fetch
- */
+
 export const fetchCategories = async (): Promise<Category[]> => {
   const res = await fetch("/api/categories?per_page=100&orderby=count&order=desc", {
     next: { revalidate: 3600 } 
@@ -16,16 +14,13 @@ export const fetchCategories = async (): Promise<Category[]> => {
   return res.json();
 };
 
-/**
- * 2. Tree Builder: Converts flat array to hierarchical structure.
- * This handles your future subcategories automatically.
- */
+
 export function buildCategoryTree(flat: Category[]): CategoryNode[] {
   if (!flat || !Array.isArray(flat)) return [];
 
   const map = new Map<number, CategoryNode>();
   
-  // Create nodes for everything first
+
   flat.forEach((c) => {
     map.set(c.id, { ...c, children: [] });
   });
@@ -49,9 +44,7 @@ export function buildCategoryTree(flat: Category[]): CategoryNode[] {
   return roots;
 }
 
-/**
- * 3. Primary Hook: Fetches the raw list
- */
+
 export function useCategories() {
   return useQuery<Category[]>({
     queryKey: ["categories"],
@@ -60,11 +53,6 @@ export function useCategories() {
   });
 }
 
-/**
- * 4. Tree Hook: The "Bunker" version.
- * useMemo ensures the tree is only rebuilt when data actually changes.
- * This is what prevents the "Back Button" freeze.
- */
 export function useCategoryTree() {
   const query = useCategories();
   
@@ -84,10 +72,7 @@ export function useCategoryTree() {
   };
 }
 
-/**
- * 5. Recursive Helper: Collects ID + all nested children IDs.
- * Added a "depth" safety to prevent infinite recursion if data is circular.
- */
+
 export function collectDescendantIds(node: CategoryNode, depth = 0): number[] {
   // Emergency brake: No WooCommerce tree should be 15 levels deep.
   if (!node || depth > 15) return [];
@@ -98,9 +83,7 @@ export function collectDescendantIds(node: CategoryNode, depth = 0): number[] {
   return [node.id, ...childIds];
 }
 
-/**
- * 6. Utility: Find a specific node anywhere in the tree.
- */
+
 export function findNodeById(
   nodes: CategoryNode[] | undefined,
   id: number

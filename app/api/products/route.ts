@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { Product } from "@/types/product";
 
-async function fetchWooCommerce<T>(endpoint: string, params: Record<string, string>): Promise<T> {
+async function fetchWooCommerce<T>(
+  endpoint: string,
+  params: Record<string, string>
+): Promise<{ data: T; totalPages: number; total: number }> {
   const url = new URL(`${process.env.WC_URL}/wp-json/wc/v3${endpoint}`);
-  
-  Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+  Object.keys(params).forEach((key) => url.searchParams.append(key, params[key]));
 
   const credentials = Buffer.from(
     `${process.env.WC_KEY}:${process.env.WC_SECRET}`
@@ -15,15 +16,18 @@ async function fetchWooCommerce<T>(endpoint: string, params: Record<string, stri
       Authorization: `Basic ${credentials}`,
       "Content-Type": "application/json",
     },
-    // Adding next revalidate ensures your API stays fresh
-    next: { revalidate: 60 } 
+    next: { revalidate: 60 },
   });
 
   if (!response.ok) {
     throw new Error(`WooCommerce Error: ${response.status} ${response.statusText}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  const totalPages = parseInt(response.headers.get("X-WP-TotalPages") ?? "1", 10);
+  const total = parseInt(response.headers.get("X-WP-Total") ?? "0", 10);
+
+  return { data, totalPages, total };
 }
 
 export async function GET(req: NextRequest) {
@@ -31,7 +35,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const q: Record<string, string> = {
-      per_page: sp.get("per_page") ?? "48", 
+      per_page: sp.get("per_page") ?? "12",
       page: sp.get("page") ?? "1",
       orderby: sp.get("orderby") ?? "menu_order",
       order: sp.get("order") ?? "asc",
@@ -55,17 +59,21 @@ export async function GET(req: NextRequest) {
     const search = sp.get("search");
     if (search) q.search = search;
 
-    // 1. Fetch raw data
-    const rawProducts = await fetchWooCommerce<any[]>("/products", q);
+    const { data: rawProducts, totalPages, total } = await fetchWooCommerce<any[]>("/products", q);
 
-    // 2. Transform the data to match your ProductCard expectations
-    // This extracts the image URL from the WooCommerce array and puts it at the top level
     const products = rawProducts.map((p) => ({
       ...p,
-      image: p.images?.[0]?.src || null, // Your ProductCard is looking for this!
+      image: p.images?.[0]?.src || null,
     }));
 
-    return NextResponse.json(products);
+    return NextResponse.json(
+      { products, totalPages, total },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        },
+      }
+    );
   } catch (err) {
     console.error("[GET /api/products]", err);
     return NextResponse.json(

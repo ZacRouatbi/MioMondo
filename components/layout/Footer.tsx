@@ -76,10 +76,10 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="flex flex-wrap items-center justify-between gap-4 py-6">
           <p className="text-snow opacity-25" style={{ fontSize: 12 }}>
-            © 2026 Mio Mondo Home. All rights reserved.
+            © 2026 Mio Mondo Home. All rights reserved. Made with ❤️ by <span className="text-#FFCA68">Brand</span><span className="text-snow">box agency</span>.
           </p>
           <div className="flex gap-6">
-            {["Facebook", "Instagram", "TikTok", "Pinterest"].map(s => (
+            {["Facebook", "Instagram", "TikTok"].map(s => (
               <a key={s} href="#"
                 className="text-snow opacity-35 hover:text-gold hover:opacity-100 transition-all duration-200"
                 style={{ fontSize: 12, letterSpacing: "0.04em" }}>

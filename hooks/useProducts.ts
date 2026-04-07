@@ -1,4 +1,4 @@
-import type { GetProductsParams, Product, ProductFilters } from "@/types/product";
+import type { GetProductsParams, Product, ProductFilters, ProductsPage } from "@/types/product";
 import type { CartItem } from "@/types/cart";
 import { useQuery } from "@tanstack/react-query";
 export function productToCartItem(
@@ -23,31 +23,44 @@ export function productToCartItem(
     sku: product.sku,
   };
 }
-async function fetchAllProducts(filters: ProductFilters): Promise<Product[]> {
+async function fetchAllProducts(filters: ProductFilters, page: number): Promise<ProductsPage> {
   // No category filter → fetch all
   if (filters.categoryIds.length === 0) {
-    return fetchProductsForCategory(0, { ...filters, categoryIds: [] });
+    return fetchProductsForCategory(0, { ...filters, categoryIds: [] }, page);
   }
  
   // Multiple categories → fetch in parallel, deduplicate
   const results = await Promise.all(
-    filters.categoryIds.map((id) => fetchProductsForCategory(id, filters))
+    filters.categoryIds.map((id) => fetchProductsForCategory(id, filters, page))
   );
  
   const seen = new Set<number>();
-  return results.flat().filter((p) => {
+  const deduplicatedProducts = results.flatMap((r) => r.products).filter((p) => {
     if (seen.has(p.id)) return false;
     seen.add(p.id);
     return true;
   });
+
+  // Calculate pagination based on total from first result
+  const total = results[0]?.total || 0;
+  const perPage = 48;
+  const totalPages = Math.ceil(total / perPage);
+
+  return {
+    products: deduplicatedProducts,
+    total,
+    totalPages,
+  };
 }
 async function fetchProductsForCategory(
   categoryId: number,
-  filters: ProductFilters
-): Promise<Product[]> {
+  filters: ProductFilters,
+  page: number
+): Promise<ProductsPage> {
   const params = new URLSearchParams();
-if (categoryId !== 0) params.set("category", String(categoryId));
+  if (categoryId !== 0) params.set("category", String(categoryId));
   params.set("per_page", "48");
+  params.set("page", String(page));
  
   const [orderby, order] =
     filters.sortBy === "price-desc"
@@ -70,10 +83,10 @@ if (categoryId !== 0) params.set("category", String(categoryId));
 
 
 // This hook handles the multi-category logic: if multiple categories are selected, we fetch each separately and merge client-side to avoid WP's "any of these categories" behavior
-export function useProducts(filters: ProductFilters) {
-  return useQuery<Product[]>({
-    queryKey: ["products", filters],
-    queryFn: () => fetchAllProducts(filters),
+export function useProducts(filters: ProductFilters, page: number = 1) {
+  return useQuery<ProductsPage>({
+    queryKey: ["products", filters, page],
+    queryFn: () => fetchAllProducts(filters, page),
     staleTime: 60 * 1000,
     placeholderData: (prev) => prev, // keep showing stale data while refetching
   });
