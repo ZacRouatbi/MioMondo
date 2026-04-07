@@ -26,14 +26,16 @@ export async function GET(request: NextRequest) {
     const categories = data
       .filter((cat: any) => cat.slug !== 'uncategorized')
       .map((cat: any) => ({
-        id: cat.id,
-        name: cat.name,
-        slug: cat.slug,
-        image: cat.image ? { 
-          src: cat.image.src, 
-          alt: cat.image.alt || cat.name 
-        } : null,
-      }));
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug,
+      parent: cat.parent ?? 0,   // ← this was missing
+      count: cat.count ?? 0,     // ← useful to have too
+      image: cat.image ? { 
+        src: cat.image.src, 
+        alt: cat.image.alt || cat.name 
+      } : null,
+    }));
 
     return NextResponse.json(categories);
   } catch (error) {

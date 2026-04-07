@@ -1,3 +1,4 @@
+import Footer from "@/components/layout/Footer";
 import MarqueeBanner from "@/components/layout/MarqueeBanner";
 import Navbar from "@/components/layout/Navbar";
 import Image from "next/image";
@@ -8,49 +9,54 @@ export default function AboutPage() {
     <main className="w-full overflow-hidden">
               <MarqueeBanner />
               <Navbar />
-      {/* ─── 1. HERO SPLIT ─────────────────────────────────────────── */}
-      <section className="grid grid-cols-1 md:grid-cols-2 min-h-[90dvh]">
+      <section className="relative w-full overflow-hidden bg-snow h-[91dvh]">
+      <Image
+    src="/OurStory.png"
+    alt="Mio Mondo atelier"
+    fill
+    sizes="100vw"
+    priority={true}
+    loading="eager" 
+    className="object-cover"
+  />
 
-        {/* Left — full-bleed photo */}
-        <div className="relative min-h-[50vw] md:min-h-0">
-          <Image
-            src="/about-hero.png"
-            alt="Mio Mondo atelier"
-            fill
-            className="object-cover object-center"
-            priority
-          />
-        </div>
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(to left, rgba(248,248,248,.95) 0%, rgba(248,248,248,.78) 35%, rgba(248,248,248,.25) 65%, transparent 85%)",
+        }}
+      />
 
-        {/* Right — story intro */}
-        <div className="bg-[#F8F8F8] flex flex-col justify-center px-12 py-20 md:px-16 lg:px-20">
-          <p className="uppercase text-[#1a1a2e]/40 text-[10px] font-semibold tracking-[0.26em] mb-6">
-            Our Story
-          </p>
+      {/* 3. Text Content: Aligned to the right using 'items-end' and 'text-right' */}
+      <div className="inner relative z-10 h-full flex flex-col justify-center items-end text-right">
+        
+        <p className="uppercase text-jet opacity-45 mb-6 text-[11px] font-semibold tracking-[0.24em]">
+          Our Story
+        </p>
 
-          <h1
-            className="text-[#1a1a2e] font-[family-name:var(--font-display)] font-light leading-[1.08] mb-8"
-            style={{ fontSize: "clamp(2.4rem, 4vw, 4rem)", maxWidth: "13ch" }}
-          >
-            Crafted with <em className="italic">intention</em>,
-            <br />
-            lived with ease
-          </h1>
+        <h1
+          className="text-jet leading-[1.06] mb-8 font-[family-name:var(--font-display)] text-[clamp(2.4rem,5vw,5.5rem)] font-normal max-w-[15ch]"
+        >
+          Crafted with <em className="italic font-light">intention</em>,
+          <br />
+          lived with ease
+        </h1>
 
-          <p className="text-[#1a1a2e]/60 text-[14px] font-light leading-[1.9] mb-10 max-w-[44ch]">
-            Mio Mondo was born from a belief that your home should feel like a
-            sanctuary — not a showroom. We source each piece with a careful eye
-            for material, maker, and meaning.
-          </p>
+        <p className="text-jet/60 text-[15px] font-light leading-[1.8] mb-10 max-w-[42ch]">
+          Mio Mondo was born from a belief that your home should feel like a
+          sanctuary — not a showroom. We source each piece with a careful eye
+          for material, maker, and meaning.
+        </p>
 
-          <a
-            href="#philosophy"
-            className="self-start inline-flex items-center justify-center border border-[#FFCA68] text-[#FFCA68] text-[11px] font-semibold tracking-[0.18em] uppercase px-8 py-3 rounded-[3px] transition-all duration-200 hover:bg-[#FFCA68] hover:text-[#1a1a2e]"
-          >
-            Our Philosophy
-          </a>
-        </div>
-      </section>
+        <a
+          href="#philosophy"
+          className="inline-flex items-center justify-center bg-gold text-jet border border-gold px-10 py-4 text-[13px] font-semibold tracking-wide rounded-[4px] transition-all duration-200 hover:bg-jet hover:text-gold hover:border-jet"
+        >
+          Our Philosophy
+        </a>
+      </div>
+    </section>
 
       {/* ─── 2. DARK STATS STRIP ────────────────────────────────────── */}
       <section className="bg-jet grid grid-cols-1 md:grid-cols-3">
@@ -122,65 +128,14 @@ export default function AboutPage() {
         {/* Right — full-bleed photo */}
         <div className="relative min-h-[50vw] md:min-h-0 order-1 md:order-2">
           <Image
-            src="/about-founder.png"
-            alt="Founder atelier"
+            src="/Philosophy.png"
+            alt="Philosophy image"
             fill
-            className="object-cover object-center"
+            //className="object-contain object-center"
           />
         </div>
       </section>
 
-      {/* ─── 4. TEAM GRID ───────────────────────────────────────────── */}
-      <section className="bg-[#F8F8F8] px-8 md:px-12 py-20">
-        <div className="flex justify-between items-end mb-12">
-          <h2
-            className="font-[family-name:var(--font-display)] font-light text-[#1a1a2e] leading-[1.1]"
-            style={{ fontSize: "clamp(1.8rem, 3vw, 2.6rem)" }}
-          >
-            The people behind{" "}
-            <em className="italic">Mio Mondo</em>
-          </h2>
-          <a
-            href="/team"
-            className="text-[10px] font-semibold tracking-[0.18em] uppercase text-[#1a1a2e]/40 border-b border-[#1a1a2e]/20 pb-[2px] hover:text-[#1a1a2e] hover:border-[#1a1a2e] transition-all duration-200 hidden md:block"
-          >
-            Meet the full team
-          </a>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-[2px]">
-          {[
-            { src: "/team-1.png", name: "Leila Mansour", role: "Founder & Creative Director" },
-            { src: "/team-2.png", name: "Amine Belkhodja", role: "Head of Sourcing" },
-            { src: "/team-3.png", name: "Sara Dhouib", role: "Interior Stylist" },
-          ].map((member) => (
-            <div
-              key={member.name}
-              className="relative aspect-[3/4] overflow-hidden group bg-[#E6E6FA]/40"
-            >
-              <Image
-                src={member.src}
-                alt={member.name}
-                fill
-                className="object-cover object-top grayscale-[15%] transition-transform duration-700 group-hover:scale-105"
-              />
-              {/* gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a2e]/70 via-transparent to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-6">
-                <p
-                  className="font-[family-name:var(--font-display)] font-light text-[#F8F8F8] mb-1"
-                  style={{ fontSize: "clamp(1.1rem, 1.8vw, 1.4rem)" }}
-                >
-                  {member.name}
-                </p>
-                <p className="text-[10px] font-semibold tracking-[0.18em] uppercase text-white/50">
-                  {member.role}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* ─── 5. PHILOSOPHY + STATS ──────────────────────────────────── */}
       <section id="philosophy" className="grid grid-cols-1 md:grid-cols-2 min-h-[420px]">
@@ -251,19 +206,15 @@ export default function AboutPage() {
 
         <div className="flex flex-wrap gap-4 justify-center">
           <a
-            href="/shop"
+            href="/products"
             className="inline-flex items-center justify-center bg-jet text-[#F8F8F8] border border-jet text-[11px] font-semibold tracking-[0.18em] uppercase px-10 py-4 rounded-[3px] transition-all duration-200 hover:bg-[#FFCA68] hover:text-jet hover:border-[#FFCA68]"
           >
             Shop the Collection
           </a>
-          <a
-            href="/contact"
-            className="inline-flex items-center justify-center bg-transparent text-jet border border-jet/30 text-[11px] font-semibold tracking-[0.18em] uppercase px-10 py-4 rounded-[3px] transition-all duration-200 hover:border-jet"
-          >
-            Book a Consultation
-          </a>
+
         </div>
       </section>
+      <Footer />
 
     </main>
   );

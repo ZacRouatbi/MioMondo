@@ -1,3 +1,4 @@
+import Image from "next/image";
 export default function LifestyleBanner() {
   return (
     /*
@@ -44,13 +45,14 @@ export default function LifestyleBanner() {
 
       {/* Image — fills remaining half */}
      <div className="relative overflow-hidden w-full h-full min-h-[300px] md:min-h-0">
-        <img
-          src="/lifestyleBanner.png"
-          alt="Mio Mondo lifestyle"
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-[1.04]"
-          loading="lazy"
-        />
-      </div>
+  <Image
+    src="/lifestyleBanner.png"
+    alt="Mio Mondo lifestyle"
+    fill
+    sizes="(max-width: 768px) 100vw, 50vw"
+    className="object-cover transition-transform duration-700 hover:scale-[1.04]"
+  />
+</div>
     </section>
   );
 }

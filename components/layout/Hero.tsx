@@ -1,3 +1,4 @@
+import Image from "next/image";
 export default function Hero() {
   return (
     /*
@@ -6,12 +7,15 @@ export default function Hero() {
       so it lines up with every other section on large screens.
     */
     <section className="relative w-full overflow-hidden bg-snow h-[91dvh]">
-      {/* Full-bleed photo */}
-      <img
-        src="/heroImage.jpg"
-        alt="Mio Mondo Home — interior lifestyle"
-        className="absolute inset-0 w-full h-full object-cover object-center"
-      />
+ 
+      <Image
+  src="/heroImage.jpg"
+  alt="Mio Mondo Home — interior lifestyle"
+  fill
+  priority
+  sizes="100vw"
+  className="object-cover object-center"
+/>
 
       {/* Left-to-right white fade so text pops */}
       <div

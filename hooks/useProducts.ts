@@ -1,5 +1,6 @@
-import type { Product } from "@/types/product";
+import type { GetProductsParams, Product, ProductFilters } from "@/types/product";
 import type { CartItem } from "@/types/cart";
+import { useQuery } from "@tanstack/react-query";
 export function productToCartItem(
   product: Product,
   quantity = 1,
@@ -22,3 +23,60 @@ export function productToCartItem(
     sku: product.sku,
   };
 }
+async function fetchAllProducts(filters: ProductFilters): Promise<Product[]> {
+  // No category filter → fetch all
+  if (filters.categoryIds.length === 0) {
+    return fetchProductsForCategory(0, { ...filters, categoryIds: [] });
+  }
+ 
+  // Multiple categories → fetch in parallel, deduplicate
+  const results = await Promise.all(
+    filters.categoryIds.map((id) => fetchProductsForCategory(id, filters))
+  );
+ 
+  const seen = new Set<number>();
+  return results.flat().filter((p) => {
+    if (seen.has(p.id)) return false;
+    seen.add(p.id);
+    return true;
+  });
+}
+async function fetchProductsForCategory(
+  categoryId: number,
+  filters: ProductFilters
+): Promise<Product[]> {
+  const params = new URLSearchParams();
+if (categoryId !== 0) params.set("category", String(categoryId));
+  params.set("per_page", "48");
+ 
+  const [orderby, order] =
+    filters.sortBy === "price-desc"
+      ? ["price", "desc"]
+      : [filters.sortBy, "asc"];
+ 
+  params.set("orderby", orderby);
+  params.set("order", order);
+ 
+  if (filters.onSaleOnly)         params.set("on_sale", "true");
+  if (filters.inStockOnly)        params.set("stock_status", "instock");
+  if (filters.minPrice != null)   params.set("min_price", String(filters.minPrice));
+  if (filters.maxPrice != null)   params.set("max_price", String(filters.maxPrice));
+  if (filters.search)             params.set("search", filters.search);
+ 
+  const res = await fetch(`/api/products?${params}`);
+  if (!res.ok) throw new Error("Failed to load products");
+  return res.json();
+}
+
+
+// This hook handles the multi-category logic: if multiple categories are selected, we fetch each separately and merge client-side to avoid WP's "any of these categories" behavior
+export function useProducts(filters: ProductFilters) {
+  return useQuery<Product[]>({
+    queryKey: ["products", filters],
+    queryFn: () => fetchAllProducts(filters),
+    staleTime: 60 * 1000,
+    placeholderData: (prev) => prev, // keep showing stale data while refetching
+  });
+}
+
+

@@ -5,6 +5,7 @@ import { useState } from "react";
 import {Props} from "@/types/product";
 import { productToCartItem } from "@/hooks/useProducts";
 import { useCartContext } from "../cart/CartContext";
+import Image from "next/image";
 
 
 export default function ProductCard({ product, variant = "default"}: Props) {
@@ -37,14 +38,14 @@ export default function ProductCard({ product, variant = "default"}: Props) {
       href={`/products/${product.slug}`}
       className={`group flex flex-col h-full rounded-xl overflow-hidden ${cardBg} transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)]`}
     >
-      {/* Image Wrapper */}
       <div className={`relative aspect-square overflow-hidden ${imgBg}`}>
-        <img
-          src={product.image || "/placeholder-product.jpg"}
-          alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          loading="lazy"
-        />
+        <Image
+        src={product.image || "/placeholder-product.jpg"}
+        alt={product.name}
+        fill
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
+        className="object-cover transition-transform duration-700 group-hover:scale-110"
+      />
         
         {product.on_sale && (
           <span className="absolute top-3 left-3 bg-[#202C39] text-[#FFCA68] text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-sm z-10">
@@ -53,9 +54,9 @@ export default function ProductCard({ product, variant = "default"}: Props) {
         )}
       </div>
 
-      {/* Card Body */}
+
       <div className="flex flex-col p-5 flex-1">
-        {/* Title - min-height ensures prices stay aligned horizontally */}
+
         <h4
           className="text-[#202C39] leading-tight mb-3 line-clamp-2 min-h-[2.8rem]"
           style={{ 
@@ -67,7 +68,6 @@ export default function ProductCard({ product, variant = "default"}: Props) {
           {product.name}
         </h4>
 
-        {/* Price Section - Forced TND */}
         <div className="flex items-baseline gap-2 mb-5">
           <span className="text-[16px] font-semibold text-[#FFCA68]">
             {product.price} <span className="text-[10px] ml-0.5 uppercase opacity-80">TND</span>
@@ -80,7 +80,7 @@ export default function ProductCard({ product, variant = "default"}: Props) {
           )}
         </div>
 
-        {/* Button - mt-auto pushes this to the very bottom */}
+
         <div className="mt-auto">
           <button
             onClick={handleAdd}

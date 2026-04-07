@@ -25,7 +25,7 @@ export default function BestSellers() {
     addItem(productToCartItem(product));
   };
 
-  // ── Data ────────────────────────────────────────────────────────────────────
+
   const { data: products, isLoading, isError } = useQuery({
     queryKey: ["bestsellers"],
     queryFn: fetchBestsellers,
@@ -37,7 +37,7 @@ export default function BestSellers() {
     ? products.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE)
     : [];
 
-  // ── Animation variants ──────────────────────────────────────────────────────
+
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.08 } },
@@ -65,7 +65,7 @@ export default function BestSellers() {
     <section className="bg-jet py-16 lg:py-20 xl:py-24 overflow-hidden">
       <div className="inner">
 
-        {/* Header */}
+
         <div className="flex items-center justify-between mb-10">
           <h2
             className="text-snow font-normal text-[clamp(1.8rem,2.5vw,2.8rem)]"
@@ -92,7 +92,7 @@ export default function BestSellers() {
           </div>
         </div>
 
-        {/* Product Grid / Loader */}
+
         <div className="min-h-[450px] relative">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -127,7 +127,7 @@ export default function BestSellers() {
           )}
         </div>
 
-        {/* Bottom Dots */}
+
         {!isLoading && pageCount > 1 && (
           <div className="flex justify-center items-center gap-2.5 mt-12">
             {Array.from({ length: pageCount }).map((_, i) => (

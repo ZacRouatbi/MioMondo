@@ -65,7 +65,7 @@ export default function CartPage() {
               something that speaks to you.
             </p>
             <a
-              href="/shop"
+              href="/products"
               className="inline-flex items-center justify-center bg-jet text-snow border border-jet text-[11px] font-semibold tracking-[0.18em] uppercase px-10 py-4 rounded-[3px] transition-all duration-200 hover:bg-[#FFCA68] hover:text-jet hover:border-[#FFCA68]"
             >
               Explore Collection
@@ -140,7 +140,7 @@ export default function CartPage() {
 
               <div className="mt-8">
                 <a
-                  href="/shop"
+                  href="/products"
                   className="inline-flex items-center gap-2 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#1a1a2e]/40 hover:text-[#1a1a2e] transition-colors duration-200"
                 >
                   <span className="text-base leading-none">←</span>

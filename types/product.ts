@@ -23,6 +23,7 @@ export interface Category {
   id: number;
   name: string;
   slug: string;
+  parent: number; // parent category ID (0 if no parent)
   count?: number; // Number of products in category
   description?: string;
   image: CategoryImage | null;
@@ -50,4 +51,37 @@ export interface Props {
   inCart?: boolean;
   onAddToCart?: () => void;
   variant?: "default" | "light";
+}
+export type SortOption =
+  | "menu_order"
+  | "popularity"
+  | "date"
+  | "price"
+  | "price-desc";
+
+export interface ProductFilters {
+  /** selected category IDs — includes subcategory IDs automatically */
+  categoryIds: number[];
+  minPrice?: number;
+  maxPrice?: number;
+  onSaleOnly: boolean;
+  inStockOnly: boolean;
+  sortBy: SortOption;
+  search: string;
+}
+
+export interface CategoryNode extends Category {
+  children: CategoryNode[];
+}
+export interface GetProductsParams {
+  category?: string;   // single WC category ID
+  per_page?: number;
+  page?: number;
+  orderby?: string;
+  order?: "asc" | "desc";
+  on_sale?: boolean;
+  stock_status?: string;
+  min_price?: string;
+  max_price?: string;
+  search?: string;
 }

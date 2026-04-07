@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useEffect, useCallback, useMemo } from "react";
+import { useReducer, useEffect, useCallback, useMemo, useRef, useState } from "react";
 import type { Cart, CartItem, CartAction } from "@/types/cart";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -106,8 +106,12 @@ const initialState: State = {
 
 export function useCart() {
   const [state, dispatch] = useReducer(reducer, initialState);
+  
+  // We need TWO guards to stop the "Auto-Delete" bug
+  const isHydrated = useRef(false);
+  const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
 
-  // Hydrate from localStorage on mount
+  // 1. Load from localStorage ONCE on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -115,19 +119,27 @@ export function useCart() {
         const parsed: CartItem[] = JSON.parse(stored);
         dispatch({ type: "HYDRATE", payload: parsed });
       }
-    } catch {
-      // corrupted storage — start fresh
+    } catch (e) {
+      console.error("Cart hydration failed", e);
+    } finally {
+      // CRITICAL: We only flip these after we are SURE we checked storage
+      isHydrated.current = true;
+      setHasLoadedFromStorage(true);
     }
   }, []);
 
-  // Persist items to localStorage on every change
+  // 2. Persist to localStorage ONLY if we have already finished hydrating
   useEffect(() => {
+    // PROTECT THE DATA: If we haven't loaded from storage yet, 
+    // DO NOT save the current (empty) state.
+    if (!isHydrated.current || !hasLoadedFromStorage) return;
+
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
-    } catch {
-      // storage quota exceeded or unavailable
+    } catch (e) {
+      console.error("Failed to save cart", e);
     }
-  }, [state.items]);
+  }, [state.items, hasLoadedFromStorage]);
 
   // Derived totals
   const totals = useMemo(

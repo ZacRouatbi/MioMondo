@@ -44,7 +44,7 @@ export async function GET() {
       featured: p.featured,
       short_description: p.short_description,
       stock_status: p.stock_status,
-      image: p.images?.[0]?.src ?? null, // ← the fix
+      image: p.images?.[0]?.src ?? null, 
       categories: p.categories ?? [],
     }));
 
