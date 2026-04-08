@@ -54,7 +54,6 @@ function DefaultIcon() {
 
 export default function CategoryTabBar({ roots, selectedIds, onSelect }: Props) {
   
-  // 1. Performance Fix: Calculate icons once per root
   const renderedRoots = useMemo(() => {
     return roots.map(cat => ({
       ...cat,

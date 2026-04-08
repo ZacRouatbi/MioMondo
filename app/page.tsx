@@ -16,10 +16,11 @@ export default function HomePage() {
       <Navbar />
       <main>
         <Hero />
-        <CategoryGrid />
         <BestSellers />
-        <LifestyleBanner />
         <ValuesStrip />
+        <LifestyleBanner />
+        {/* <CategoryGrid /> */}
+
         <NewsletterSection />
       </main>
       <Footer />

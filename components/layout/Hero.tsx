@@ -42,13 +42,13 @@ export default function Hero() {
 
         <div className="flex flex-wrap gap-4">
           <a
-            href="/shop"
+            href="/products"
             className="inline-flex items-center justify-center bg-gold text-jet border border-gold px-8 py-4 text-[13px] font-semibold tracking-wide rounded-[4px] transition-all duration-200 hover:bg-jet hover:text-gold hover:border-jet whitespace-nowrap"
           >
             Shop Now
           </a>
           <a
-            href="/shop?view=collections"
+            href="/collections"
             className="inline-flex items-center justify-center bg-transparent text-jet border border-jet/30 px-8 py-4 text-[13px] font-medium tracking-wide rounded-[4px] transition-all duration-200 hover:border-jet whitespace-nowrap"
           >
             Explore Collections

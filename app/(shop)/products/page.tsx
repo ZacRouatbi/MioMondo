@@ -35,17 +35,14 @@ export default function ProductsPage() {
   const page = parseInt(searchParams.get("page") ?? "1", 10);
   const categoryQuery = searchParams.get("category");
 
-  // 1. ONE-TIME HYDRATION
-  // Reads the ?category= slug from the URL exactly once when the tree is ready
 
 
-  // 2. DATA FETCHING
+
   const { data, isLoading, isFetching, error } = useProducts(filters, page);
   const products = data?.products;
   const totalPages = data?.totalPages ?? 1;
   const total = data?.total ?? 0;
 
-  // 3. FILTER UPDATES
   const updateFilters = useCallback(
     (patch: Partial<ProductFilters>) => {
       setFilters((prev) => ({ ...prev, ...patch }));
@@ -53,7 +50,7 @@ export default function ProductsPage() {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("page");
 
-      // If categories are changed manually, the specific URL slug is no longer valid
+
       if (patch.categoryIds) {
         params.delete("category");
       }
@@ -73,8 +70,6 @@ export default function ProductsPage() {
     [router, searchParams]
   );
 
-  // 4. HERO LOGIC
-  // Returns the root category if exactly one branch is selected, otherwise null
   const activeTopLevel = useMemo(() => {
     if (filters.categoryIds.length === 0 || tree.length === 0) return null;
 

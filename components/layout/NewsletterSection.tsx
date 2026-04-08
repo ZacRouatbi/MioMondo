@@ -37,20 +37,20 @@ export default function NewsletterSection() {
   };
 
   return (
-    <section className="bg-[#202C39] py-20 px-4">
+    <section className="bg-[#F8F8F8] py-20 px-4">
       <div className="max-w-4xl mx-auto text-center">
         <p className="text-[#FFCA68] uppercase text-[11px] font-bold tracking-[0.3em] mb-6">
           ✦ Mio Mondo Club
         </p>
         
-        <h2 className="text-white text-4xl md:text-5xl font-light mb-6" style={{ fontFamily: 'var(--font-display)' }}>
+        <h2 className="text-jet text-4xl md:text-5xl font-light mb-6" style={{ fontFamily: 'var(--font-display)' }}>
           Design inspiration, <br className="hidden md:block" /> delivered.
         </h2>
 
         {status === "success" ? (
           <div className="flex flex-col items-center gap-3 animate-in fade-in slide-in-from-bottom-4">
             <CheckCircle2 className="text-[#FFCA68]" size={40} strokeWidth={1} />
-            <p className="text-white text-xl font-light">Please check your inbox to confirm.</p>
+            <p className="text-jet text-xl font-light">Please check your inbox to confirm.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="mt-10 max-w-lg mx-auto relative">
@@ -60,7 +60,7 @@ export default function NewsletterSection() {
                 placeholder="Email Address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 bg-white/5 border border-white/10 px-6 py-4 text-white outline-none focus:bg-white/10 transition-all"
+                className="flex-1 bg-white/5 border border-jet/10 px-6 py-4 text-jet outline-none focus:bg-snow/10 transition-all"
                 required
               />
               <button

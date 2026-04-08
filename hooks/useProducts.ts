@@ -118,39 +118,27 @@ function buildProductParams(filters: ProductFilters, page: number): URLSearchPar
  
 export function useProducts(filters: ProductFilters, page: number = 1) {
   const queryClient = useQueryClient();
- 
   const queryKey = ["products", filters, page] as const;
- 
+
   const result = useQuery<ProductsPage>({
     queryKey,
-    queryFn: async () => {
-      const params = buildProductParams(filters, page);
-      const res = await fetch(`/api/products?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch products");
-      return res.json();
-    },
-    staleTime: 1000 * 60 * 2, // 2 minutes — avoids refetch on quick filter toggles
-    placeholderData: (prev) => prev, // keeps previous page visible while next loads (replaces keepPreviousData in v5)
+    queryFn: () => fetchAllProducts(filters, page), // ← use this instead of buildProductParams
+    staleTime: 1000 * 60 * 2,
+    placeholderData: (prev) => prev,
   });
- 
-  // Prefetch next page so pagination feels instant
+
   useEffect(() => {
     if (!result.data) return;
     const { totalPages } = result.data;
     if (page < totalPages) {
-      const nextParams = buildProductParams(filters, page + 1);
       queryClient.prefetchQuery({
         queryKey: ["products", filters, page + 1],
-        queryFn: async () => {
-          const res = await fetch(`/api/products?${nextParams.toString()}`);
-          if (!res.ok) throw new Error("Failed to fetch products");
-          return res.json();
-        },
+        queryFn: () => fetchAllProducts(filters, page + 1),
         staleTime: 1000 * 60 * 2,
       });
     }
   }, [result.data, page, filters, queryClient]);
- 
+
   return result;
 }
 

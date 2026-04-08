@@ -1,15 +1,15 @@
 const LINKS = [
   {
     col: "Shop",
-    items: ["Home Decor", "Kitchen Essentials", "Lifestyle", "Gifts", "New Arrivals", "Sale"],
+    items: ["Art De Table", "Cuisine","Maison et Décoration", "Salle De Bain","Electroménager"],
   },
   {
-    col: "Help",
-    items: ["My Account", "Track Order", "Returns", "FAQ", "Contact Us"],
+    col: "Votre Compte",
+    items: ["Informations personnelles", "Commandes", "Mes listes de souhaits"],
   },
   {
-    col: "Company",
-    items: ["About Us", "Décor Blog", "Press", "Careers", "Sustainability"],
+    col: "Entreprise",
+    items: ["Politique de retour","Politique de Confidentialité","Conditions d'utilisation","Contactez-nous"],
   },
 ];
 
