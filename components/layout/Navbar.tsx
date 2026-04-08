@@ -10,8 +10,8 @@ import { useCartContext } from "../cart/CartContext";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
+  { label: "Collections", href: "/collections" },
   { label: "Shop", href: "/products" },
-  { label: "Collections", href: "/shop?view=collections" },
   { label: "About", href: "/about" },
 ];
 

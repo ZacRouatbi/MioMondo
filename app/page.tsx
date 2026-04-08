@@ -11,6 +11,7 @@ export default function HomePage() {
 
   return (
     <>
+  
       <MarqueeBanner />
       <Navbar />
       <main>
@@ -22,6 +23,7 @@ export default function HomePage() {
         <NewsletterSection />
       </main>
       <Footer />
+     
     </>
   );
 }

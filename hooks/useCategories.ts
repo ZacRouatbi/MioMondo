@@ -1,15 +1,13 @@
 "use client";
-
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Category, CategoryNode } from "@/types/product";
 
 
-export const fetchCategories = async (): Promise<Category[]> => {
+export const fetchCategories = async (_: any): Promise<Category[]> => {
   const res = await fetch("/api/categories?per_page=100&orderby=count&order=desc", {
-    next: { revalidate: 3600 } 
+    cache: "no-store",
   });
-  
   if (!res.ok) throw new Error("Failed to fetch categories");
   return res.json();
 };
@@ -35,7 +33,6 @@ export function buildCategoryTree(flat: Category[]): CategoryNode[] {
       if (parent) {
         parent.children.push(node);
       } else {
-        // Orphan handling: If parent isn't in this batch, treat as root
         roots.push(node);
       }
     }
@@ -49,7 +46,7 @@ export function useCategories() {
   return useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: fetchCategories,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, 
   });
 }
 
@@ -64,7 +61,7 @@ export function useCategoryTree() {
       console.error("Error building category tree:", err);
       return [];
     }
-  }, [query.data]); // Critical dependency
+  }, [query.data]); 
 
   return {
     ...query,
@@ -74,7 +71,7 @@ export function useCategoryTree() {
 
 
 export function collectDescendantIds(node: CategoryNode, depth = 0): number[] {
-  // Emergency brake: No WooCommerce tree should be 15 levels deep.
+
   if (!node || depth > 15) return [];
 
   const children = node.children || [];

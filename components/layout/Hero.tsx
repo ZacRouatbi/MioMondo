@@ -9,13 +9,13 @@ export default function Hero() {
     <section className="relative w-full overflow-hidden bg-snow h-[91dvh]">
  
       <Image
-  src="/heroImage.jpg"
-  alt="Mio Mondo Home — interior lifestyle"
-  fill
-  priority
-  sizes="100vw"
-  className="object-cover object-center"
-/>
+          src="/heroImage.jpg"
+          alt="Mio Mondo Home — interior lifestyle"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+          />
 
       {/* Left-to-right white fade so text pops */}
       <div
