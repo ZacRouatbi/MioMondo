@@ -1,7 +1,15 @@
+import Link from "next/link";
+
 const LINKS = [
   {
     col: "Shop",
-    items: ["Art De Table", "Cuisine","Maison et Décoration", "Salle De Bain","Electroménager"],
+    items: [
+      { label: "Art De Table", slug: "art-de-table" },
+      { label: "Cuisine", slug: "cuisine" },
+      { label: "Maison et Décoration", slug: "maison-et-decoration" },
+      { label: "Salle De Bain", slug: "salle-de-bain" },
+      { label: "Electroménager", slug: "electromenager" },
+    ],
   },
   {
     col: "Votre Compte",
@@ -9,7 +17,7 @@ const LINKS = [
   },
   {
     col: "Entreprise",
-    items: ["Politique de retour","Politique de Confidentialité","Conditions d'utilisation","Contactez-nous"],
+    items: ["Politique de retour", "Politique de Confidentialité", "Conditions d'utilisation", "Contactez-nous"],
   },
 ];
 
@@ -20,11 +28,8 @@ export default function Footer() {
         className="inner"
         style={{ paddingTop: "clamp(3.5rem, 6vw, 6rem)" }}
       >
-
-        {/* Main grid: brand wide left, 3 link columns right */}
         <div className="grid grid-cols-2 md:grid-cols-[2.5fr_1fr_1fr_1fr] gap-10 lg:gap-16 xl:gap-20 pb-14 border-b border-white/[.08]">
-
-          {/* Brand */}
+          
           <div className="col-span-2 md:col-span-1">
             <div
               className="text-snow tracking-[.04em] leading-none mb-1"
@@ -47,7 +52,6 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Link columns */}
           {LINKS.map(({ col, items }) => (
             <div key={col}>
               <h4
@@ -57,26 +61,31 @@ export default function Footer() {
                 {col}
               </h4>
               <ul className="flex flex-col gap-3.5">
-                {items.map(item => (
-                  <li key={item}>
-                    <a
-                      href="#"
-                      className="text-snow opacity-40 hover:opacity-100 transition-opacity duration-200"
-                      style={{ fontSize: "clamp(13px,1vw,15px)" }}
-                    >
-                      {item}
-                    </a>
-                  </li>
-                ))}
+                {items.map((item, idx) => {
+                  const isShop = col === "Shop";
+                  const label = isShop ? (item as any).label : item;
+                  const href = isShop ? `/products?category=${(item as any).slug}` : "#";
+
+                  return (
+                    <li key={idx}>
+                      <Link
+                        href={href}
+                        className="text-snow opacity-40 hover:opacity-100 transition-opacity duration-200"
+                        style={{ fontSize: "clamp(13px,1vw,15px)" }}
+                      >
+                        {label}
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}
         </div>
 
-        {/* Bottom bar */}
         <div className="flex flex-wrap items-center justify-between gap-4 py-6">
           <p className="text-snow opacity-25" style={{ fontSize: 12 }}>
-            © 2026 Mio Mondo Home. All rights reserved. Made with ❤️ by <span className="text-#FFCA68">Brand</span><span className="text-snow">box agency</span>.
+            © 2026 Mio Mondo Home. All rights reserved. Made with ❤️ by <span className="text-[#FFCA68]">Brand</span>box agency.
           </p>
           <div className="flex gap-6">
             {["Facebook", "Instagram", "TikTok"].map(s => (

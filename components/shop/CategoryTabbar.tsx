@@ -100,7 +100,7 @@ export default function CategoryTabBar({ roots, selectedIds, onSelect }: Props) 
         return (
           <button
             key={cat.id}
-            // Move the recursive logic inside the click handler
+  
             onClick={() => {
               const allChildIds = collectDescendantIds(cat);
               onSelect(allChildIds);
