@@ -13,7 +13,7 @@ const LINKS = [
   },
   {
     col: "Votre Compte",
-    items: ["Informations personnelles", "Commandes", "Mes listes de souhaits"],
+    items: ["Informations personnelles", "Commandes", "Ma liste de souhaits"],
   },
   {
     col: "Entreprise",

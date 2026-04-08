@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation"; // Added for routing
 import { AnimatePresence } from "framer-motion";
+import Link from "next/link"; // Changed from <a> to Link for better performance
 import AuthModal from "./../ui/auth/AuthModal";
 import SearchModal from "./../ui/SearchModal";
-import UserDropdown from "./../ui/auth/UserDropdown";
 import { useUser } from "@/hooks/useUser";
 import { useCartContext } from "../cart/CartContext";
 
@@ -16,36 +17,24 @@ const NAV_LINKS = [
 ];
 
 export default function Navbar() {
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Modals & Dropdown State
+  // Modals State (Removed isProfileOpen as it's no longer a dropdown)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const { data: session } = useUser();
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // ── Cart count from context ──────────────────────────────────────────────
+  // Cart count from context
   const { itemCount } = useCartContext();
 
-  // 1. Handle scroll effect
+  // Handle scroll effect
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // 2. Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsProfileOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleLogout = async () => {
@@ -59,7 +48,8 @@ export default function Navbar() {
 
   const handleAccountClick = () => {
     if (session?.authenticated) {
-      setIsProfileOpen(!isProfileOpen);
+      // Direct route instead of toggling state
+      router.push('/account');
     } else {
       setIsAuthModalOpen(true);
     }
@@ -79,7 +69,7 @@ export default function Navbar() {
             <nav className="flex items-center">
               <div className="hidden md:flex items-center gap-8 xl:gap-12">
                 {NAV_LINKS.map(l => (
-                  <a
+                  <Link
                     key={l.label}
                     href={l.href}
                     className="relative py-1 h-fit text-[13px] text-jet opacity-70 hover:opacity-100 transition-all duration-300 group"
@@ -88,7 +78,7 @@ export default function Navbar() {
                       {l.label}
                     </span>
                     <span className="absolute bottom-[2px] left-0 w-0 h-[1.5px] bg-[#FFCA68] transition-all duration-300 ease-out group-hover:w-full" />
-                  </a>
+                  </Link>
                 ))}
               </div>
 
@@ -103,7 +93,7 @@ export default function Navbar() {
             </nav>
 
             {/* ── Center: Logo ── */}
-            <a href="/" className="text-center select-none group">
+            <Link href="/" className="text-center select-none group">
               <span
                 className="block text-jet tracking-[.05em] leading-none transition-transform duration-500 group-hover:scale-[1.02]"
                 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(20px,1.8vw,28px)", fontWeight: 500 }}
@@ -115,7 +105,7 @@ export default function Navbar() {
                 <span className="text-[8px] tracking-[.4em] text-jet opacity-40 uppercase group-hover:text-[#FFCA68] group-hover:opacity-100 transition-all">HOME</span>
                 <span className="block h-px w-5 bg-jet opacity-25 group-hover:bg-[#FFCA68] group-hover:opacity-100 transition-all" />
               </span>
-            </a>
+            </Link>
 
             {/* ── Right: Icons ── */}
             <div className="flex items-center justify-end gap-5 xl:gap-7">
@@ -131,7 +121,7 @@ export default function Navbar() {
               </button>
 
               {/* Account / Profile Trigger */}
-              <div className="relative flex-shrink-0" ref={dropdownRef}>
+              <div className="relative flex-shrink-0">
                 <button
                   onClick={handleAccountClick}
                   className={`flex items-center justify-center w-8 h-8 flex-shrink-0 transition-all duration-300 hover:scale-110 outline-none ${
@@ -146,19 +136,10 @@ export default function Navbar() {
                     <circle cx="12" cy="7" r="4" />
                   </svg>
                 </button>
-
-                <AnimatePresence>
-                  {isProfileOpen && session?.user && (
-                    <UserDropdown
-                      user={session.user}
-                      onLogout={handleLogout}
-                    />
-                  )}
-                </AnimatePresence>
               </div>
 
               {/* ── Cart icon with live count ── */}
-              <a
+              <Link
                 href="/cart"
                 className="relative flex items-center justify-center w-8 h-8 flex-shrink-0 text-jet opacity-60 hover:text-[#FFCA68] hover:opacity-100 transition-all duration-300 hover:scale-110"
                 aria-label={`Cart — ${itemCount} item${itemCount !== 1 ? "s" : ""}`}
@@ -169,13 +150,12 @@ export default function Navbar() {
                   <path d="M16 10a4 4 0 0 1-8 0" />
                 </svg>
 
-                {/* Badge — only renders when cart has items */}
                 {itemCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-[#FFCA68] text-jet text-[9px] font-bold w-[17px] h-[17px] rounded-full flex items-center justify-center shadow-sm">
                     {itemCount > 99 ? "99+" : itemCount}
                   </span>
                 )}
-              </a>
+              </Link>
             </div>
 
           </div>
@@ -211,7 +191,7 @@ export default function Navbar() {
         >✕</button>
 
         {NAV_LINKS.map((l, i) => (
-          <a
+          <Link
             key={l.label}
             href={l.href}
             onClick={() => setMobileOpen(false)}
@@ -224,19 +204,30 @@ export default function Navbar() {
             }}
           >
             {l.label}
-          </a>
+          </Link>
         ))}
 
         {session?.authenticated && (
           <div className="mt-auto p-6 bg-lavender/30 rounded-2xl">
             <p className="text-[10px] uppercase tracking-widest text-jet/40 font-bold mb-1">Logged in as</p>
             <p className="text-jet font-medium mb-4 truncate">{session.user.email}</p>
-            <button
-              onClick={handleLogout}
-              className="text-sm font-bold text-[#FFCA68] underline underline-offset-4"
-            >
-              Sign Out
-            </button>
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  setMobileOpen(false);
+                  router.push('/account');
+                }}
+                className="text-sm font-bold text-jet underline underline-offset-4"
+              >
+                Account
+              </button>
+              <button
+                onClick={handleLogout}
+                className="text-sm font-bold text-[#FFCA68] underline underline-offset-4"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
         )}
       </div>
