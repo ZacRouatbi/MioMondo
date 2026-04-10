@@ -408,7 +408,7 @@ For questions or support:
 
 <div align="center">
 
-**Made with ❤️ by the MioMondo Team**
+**Made with ❤️ by the Brandbox Agency**
 
 [⬆ Back to Top](#miomondo---headless-e-commerce-platform-)
 
