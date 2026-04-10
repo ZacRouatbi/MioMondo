@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Providers from "./providers";
 import { CartProvider } from "@/components/cart/CartContext";
+import { AuthModalProvider } from "@/components/ui/auth/AuthModalContext";
 
 export const metadata: Metadata = {
   title: "Mio Mondo Home — Décoration Intérieure",
@@ -29,7 +30,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CartProvider>
             <main>
               
-              {children}
+           <AuthModalProvider>
+            {children}
+          </AuthModalProvider>
               </main>
           </CartProvider>
         </Providers>

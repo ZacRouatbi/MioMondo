@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// ─── WooCommerce client ───────────────────────────────────────────────────────
-
 const WC_URL = process.env.WC_URL!;
 const WC_KEY = process.env.WC_KEY!;
 const WC_SECRET = process.env.WC_SECRET!;
@@ -28,8 +26,6 @@ async function wcFetch(path: string, options: RequestInit = {}) {
   return res.json();
 }
 
-// Raw WooCommerce product shape — NOT your Product type.
-// WC returns images as an array; never as a flat `image` field.
 type WCRawProduct = {
   id: number;
   name: string;
@@ -43,11 +39,10 @@ type WCRawProduct = {
   featured: boolean;
   short_description: string;
   stock_status: "instock" | "outofstock" | "onbackorder";
-  images: { id: number; src: string; alt: string }[]; // ← array, not flat
+  images: { id: number; src: string; alt: string }[];
   categories: { id: number; name: string; slug: string }[];
 };
 
-// ─── Shared mapper: WC raw → your Product shape ───────────────────────────────
 function mapProduct(p: WCRawProduct) {
   return {
     id: p.id,
@@ -62,12 +57,10 @@ function mapProduct(p: WCRawProduct) {
     featured: p.featured,
     short_description: p.short_description,
     stock_status: p.stock_status,
-    image: p.images?.[0]?.src ?? null, // ← flatten here, once, for everyone
+    image: p.images?.[0]?.src ?? null,
     categories: p.categories ?? [],
   };
 }
-
-
 
 export async function GET(request: NextRequest) {
   try {
@@ -147,9 +140,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-// ─── DELETE /api/cart ─────────────────────────────────────────────────────────
-// Cancels a pending order. Body: { orderId: number }
 
 export async function DELETE(request: NextRequest) {
   try {

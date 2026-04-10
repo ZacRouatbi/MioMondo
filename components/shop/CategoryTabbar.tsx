@@ -92,9 +92,6 @@ export default function CategoryTabBar({ roots, selectedIds, onSelect }: Props) 
       </button>
 
       {renderedRoots.map((cat) => {
-        // 2. CRITICAL PERFORMANCE FIX: 
-        // Do not call collectDescendantIds in the render body. 
-        // We only check if the current category ID is in the selection.
         const isActive = selectedIds.includes(cat.id);
 
         return (

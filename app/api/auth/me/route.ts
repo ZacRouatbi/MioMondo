@@ -10,7 +10,6 @@ export async function GET() {
   }
 
   try {
-    // Validate the token with the JWT plugin's 'validate' endpoint
     const response = await fetch(`${process.env.WC_URL}/wp-json/jwt-auth/v1/token/validate`, {
       method: "POST",
       headers: {
@@ -22,13 +21,11 @@ export async function GET() {
       return NextResponse.json({ authenticated: false }, { status: 401 });
     }
 
-    // If valid, fetch the actual user details
     const userRes = await fetch(`${process.env.WC_URL}/wp-json/wp/v2/users/me`, {
       headers: { "Authorization": `Bearer ${token}` },
     });
     
     const userData = await userRes.json();
-
     return NextResponse.json({
       authenticated: true,
       user: {

@@ -5,7 +5,6 @@ export const useAuth = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  // ─── LOGIN ───
   const login = useMutation({
     mutationFn: async (credentials: any) => {
       const res = await fetch("/api/auth/login", {
@@ -14,7 +13,7 @@ export const useAuth = () => {
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
+      if (!res.ok) throw new Error("Login failed : l'adresse e-mail ou le mot de passe est incorrect");
       return data;
     },
     onSuccess: () => {
@@ -23,7 +22,6 @@ export const useAuth = () => {
     },
   });
 
-  // ─── SIGNUP ───
   const signup = useMutation({
     mutationFn: async (userData: any) => {
       const res = await fetch("/api/auth/signup", {
@@ -40,7 +38,6 @@ export const useAuth = () => {
     },
   });
 
-  // ─── LOGOUT ───
   const logoutMutation = useMutation({
     mutationFn: async () => {
       const res = await fetch("/api/auth/logout", {
@@ -56,7 +53,7 @@ export const useAuth = () => {
       
       router.push("/");
       router.refresh(); 
-      // Note: If Server Components don't update, swap router.refresh() for window.location.reload()
+
     },
   });
 

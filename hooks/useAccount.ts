@@ -2,14 +2,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CustomerInfo, Order, WishlistItem } from "@/types/user";
-// ─────────────────────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────────────────────
-
-
-// ─────────────────────────────────────────────────────────────────────────────
-// useAccountInfo - Fetch and update customer information
-// ─────────────────────────────────────────────────────────────────────────────
 
 export const useAccountInfo = (customerId?: string | number) => {
   const queryClient = useQueryClient();
@@ -52,10 +44,6 @@ export const useAccountInfo = (customerId?: string | number) => {
   };
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// useAccountOrders - Fetch customer orders
-// ─────────────────────────────────────────────────────────────────────────────
-
 export const useAccountOrders = (customerId?: string | number) => {
   const query = useQuery({
     queryKey: ["account", "orders", customerId],
@@ -76,10 +64,6 @@ export const useAccountOrders = (customerId?: string | number) => {
     error: query.error,
   };
 };
-
-// ─────────────────────────────────────────────────────────────────────────────
-// useAccountWishlist - Fetch and manage wishlist items
-// ─────────────────────────────────────────────────────────────────────────────
 
 export const useAccountWishlist = (customerId?: string | number) => {
   const queryClient = useQueryClient();
@@ -122,23 +106,18 @@ export const useAccountWishlist = (customerId?: string | number) => {
   };
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// useChangePassword - Change customer password
-// ─────────────────────────────────────────────────────────────────────────────
-
 export const useChangePassword = (customerId?: string | number) => {
   const mutation = useMutation({
     mutationFn: async (passwords: { current: string; next: string }) => {
       if (!customerId) throw new Error("Customer ID is required");
-      const res = await fetch(`/api/account/password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: customerId,
-          current: passwords.current,
-          next: passwords.next,
-        }),
-      });
+    const res = await fetch(`/api/account/password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        current: passwords.current,
+        next: passwords.next,
+      }),
+    });
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.message || "Failed to change password");
@@ -154,10 +133,6 @@ export const useChangePassword = (customerId?: string | number) => {
     isSuccess: mutation.isSuccess,
   };
 };
-
-// ─────────────────────────────────────────────────────────────────────────────
-// useAccount - Convenience hook combining all account operations
-// ─────────────────────────────────────────────────────────────────────────────
 
 export const useAccount = (customerId?: string | number) => {
   const info = useAccountInfo(customerId);

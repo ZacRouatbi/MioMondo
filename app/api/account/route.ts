@@ -1,8 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// app/api/account/orders/route.ts
-// ─────────────────────────────────────────────────────────────────────────────
-// GET /api/account/orders?customer=123
-
 import { NextRequest, NextResponse } from "next/server";
 
 const WC_URL    = process.env.WC_URL!;
@@ -26,49 +21,6 @@ export async function GET(req: NextRequest) {
   const data = await res.json();
   return NextResponse.json(data);
 }
-// ─────────────────────────────────────────────────────────────────────────────
-// app/api/account/password/route.ts
-// ─────────────────────────────────────────────────────────────────────────────
-// POST /api/account/password  { id, current, next }
-// NOTE: Validates via WP REST auth before updating — never accepts blind resets
-
-export async function POST_PASSWORD(req: NextRequest) {
-  const { id, current, next } = await req.json();
-
-  if (!current || !next || next.length < 8) {
-    return NextResponse.json({ message: "Données invalides" }, { status: 400 });
-  }
-
-  // 1. Verify current password via WP auth endpoint
-  const verifyRes = await fetch(`${WC_URL}/wp-json/jwt-auth/v1/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: id, password: current }),
-  });
-  if (!verifyRes.ok) {
-    return NextResponse.json({ message: "Mot de passe actuel incorrect" }, { status: 403 });
-  }
-
-  // 2. Update via WC API (password field)
-  const res = await fetch(`${WC_URL}/wp-json/wc/v3/customers/${id}`, {
-    method: "PUT",
-    headers: { Authorization: wcAuth(), "Content-Type": "application/json" },
-    body: JSON.stringify({ password: next }),
-  });
-
-  if (!res.ok) return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
-  return NextResponse.json({ ok: true });
-}
-
-
-// ─────────────────────────────────────────────────────────────────────────────
-// app/api/account/wishlist/route.ts
-// ─────────────────────────────────────────────────────────────────────────────
-// Uses: TI WooCommerce Wishlist (free plugin)
-// Plugin REST base: /wp-json/ti-woocommerce-wishlist/v1
-//
-// GET    /api/account/wishlist?customer=123
-// DELETE /api/account/wishlist  { customer, product_id }
 
 export async function GET_WISHLIST(req: NextRequest) {
   const customerId = req.nextUrl.searchParams.get("customer");
@@ -104,16 +56,6 @@ export async function DELETE_WISHLIST(req: NextRequest) {
 
   return NextResponse.json({ ok: res.ok });
 }
-
-
-// ─────────────────────────────────────────────────────────────────────────────
-// app/api/account/payment-methods/route.ts
-// ─────────────────────────────────────────────────────────────────────────────
-// Payment tokens are stored as WooCommerce payment tokens (never raw card data).
-// Raw PAN is never stored or passed through — only token ID + last4 + expiry.
-//
-// GET    /api/account/payment-methods
-// DELETE /api/account/payment-methods  { token_id }
 
 export async function GET_PAYMENT(req: NextRequest) {
   // Get customer id from session — do NOT accept it from query string
@@ -165,7 +107,6 @@ export async function DELETE_PAYMENT(req: NextRequest) {
   return NextResponse.json({ ok: res.ok });
 }
 
-// ─── Stub: replace with your real session logic ───────────────────────────────
 function getCustomerIdFromSession(req: NextRequest): string | null {
   // Example with NextAuth:
   // const session = await getServerSession(authOptions);

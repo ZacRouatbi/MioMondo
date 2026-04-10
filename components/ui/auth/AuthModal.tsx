@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Lock, ArrowRight, Loader2, AlertCircle } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth"; // We'll create this next
+import { useAuth } from "@/hooks/useAuth"; 
 
 type AuthMode = "login" | "signup" | "reset";
 
@@ -33,7 +33,6 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Extract errors from TanStack mutations
   const authError = login.error?.message || signup.error?.message;
 
   return (

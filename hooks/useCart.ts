@@ -3,13 +3,9 @@
 import { useReducer, useEffect, useCallback, useMemo, useRef, useState } from "react";
 import type { Cart, CartItem, CartAction } from "@/types/cart";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
 const STORAGE_KEY = "mm_cart";
 const FREE_SHIPPING_THRESHOLD = 300;
 const SHIPPING_RATE = 15;
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function isSameItem(a: CartItem, b: Pick<CartItem, "id" | "variationId">) {
   return a.id === b.id && (a.variationId ?? null) === (b.variationId ?? null);
@@ -26,8 +22,6 @@ function computeTotals(
   const total = subtotal - discount + shipping;
   return { subtotal, discount, shipping, total };
 }
-
-// ─── Reducer ─────────────────────────────────────────────────────────────────
 
 type State = {
   items: CartItem[];
@@ -102,16 +96,12 @@ const initialState: State = {
   discountPercent: 0,
 };
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
-
 export function useCart() {
   const [state, dispatch] = useReducer(reducer, initialState);
   
-  // We need TWO guards to stop the "Auto-Delete" bug
   const isHydrated = useRef(false);
   const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
 
-  // 1. Load from localStorage ONCE on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -128,10 +118,7 @@ export function useCart() {
     }
   }, []);
 
-  // 2. Persist to localStorage ONLY if we have already finished hydrating
   useEffect(() => {
-    // PROTECT THE DATA: If we haven't loaded from storage yet, 
-    // DO NOT save the current (empty) state.
     if (!isHydrated.current || !hasLoadedFromStorage) return;
 
     try {
@@ -141,7 +128,6 @@ export function useCart() {
     }
   }, [state.items, hasLoadedFromStorage]);
 
-  // Derived totals
   const totals = useMemo(
     () => computeTotals(state.items, state.discountPercent, state.promoCode),
     [state.items, state.discountPercent, state.promoCode]
@@ -155,8 +141,6 @@ export function useCart() {
     shipping: totals.shipping,
     total: totals.total,
   };
-
-  // ── Actions ────────────────────────────────────────────────────────────────
 
   const addItem = useCallback((item: CartItem) => {
     dispatch({ type: "ADD_ITEM", payload: item });
@@ -216,5 +200,6 @@ export function useCart() {
     applyPromo,
     removePromo,
     clearCart,
+    isHydrated: hasLoadedFromStorage,
   };
 }

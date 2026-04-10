@@ -4,7 +4,6 @@ const WC_URL    = process.env.WC_URL!;
 const WC_KEY    = process.env.WC_KEY!;
 const WC_SECRET = process.env.WC_SECRET!;
 
-// Helper for Basic Auth
 function wcAuth() {
   return "Basic " + Buffer.from(`${WC_KEY}:${WC_SECRET}`).toString("base64");
 }

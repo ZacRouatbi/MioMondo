@@ -1,44 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
-const WC_URL    = process.env.WC_URL!;
-const WC_KEY    = process.env.WC_KEY!;
-const WC_SECRET = process.env.WC_SECRET!;
+const WC_URL = process.env.WC_URL!;
+const MIO_BASE = `${WC_URL}/wp-json/mio/v1/wishlist`;
 
-function wcAuth() {
-  return "Basic " + Buffer.from(`${WC_KEY}:${WC_SECRET}`).toString("base64");
+export async function GET() {
+  const token = (await cookies()).get("mio_auth_token")?.value;
+  if (!token) return NextResponse.json([]);
+
+  const res = await fetch(`${MIO_BASE}/get`, {
+    headers: { "Authorization": `Bearer ${token}`, "Cache-Control": "no-cache" },
+  });
+  return NextResponse.json(await res.json());
 }
 
-export async function GET_WISHLIST(req: NextRequest) {
-  const customerId = req.nextUrl.searchParams.get("customer");
+export async function POST(req: NextRequest) {
+  const token = (await cookies()).get("mio_auth_token")?.value;
+  const { productId } = await req.json();
 
-  const res = await fetch(
-    `${WC_URL}/wp-json/ti-woocommerce-wishlist/v1/wishlists/get_products?user_id=${customerId}`,
-    { headers: { Authorization: wcAuth() } }
-  );
+  const res = await fetch(`${MIO_BASE}/add`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ productId }),
+  });
+  return NextResponse.json(await res.json());
+}
 
-  if (!res.ok) return NextResponse.json([], { status: 200 }); // graceful empty on error
+export async function DELETE(req: NextRequest) {
+  const token = (await cookies()).get("mio_auth_token")?.value;
+  
+  // We read from searchParams because your hook uses ?productId=...
+  const { searchParams } = new URL(req.url);
+  const productId = searchParams.get("productId");
+
+  const res = await fetch(`${MIO_BASE}/remove`, {
+    method: "POST", // Calling the PHP remove route via POST
+    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ productId: Number(productId) }),
+  });
+
   const data = await res.json();
-  // Normalize to { product_id, name, price, image }
-  const items = (data?.products ?? []).map((p: any) => ({
-    product_id: p.product_id,
-    name: p.name,
-    price: p.price,
-    image: p.thumbnail,
-  }));
-  return NextResponse.json(items);
-}
-
-export async function DELETE_WISHLIST(req: NextRequest) {
-  const { customer, product_id } = await req.json();
-
-  const res = await fetch(
-    `${WC_URL}/wp-json/ti-woocommerce-wishlist/v1/wishlists/remove_product`,
-    {
-      method: "DELETE",
-      headers: { Authorization: wcAuth(), "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: customer, product_id }),
-    }
-  );
-
-  return NextResponse.json({ ok: res.ok });
+  return NextResponse.json(data);
 }

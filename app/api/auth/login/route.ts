@@ -10,22 +10,18 @@ export async function POST(req: Request) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        username: email, // The plugin uses 'username' but accepts email
+        username: email, 
         password: password,
       }),
     });
 
     const data = await wpRes.json();
-
-    // 2. Handle Errors (e.g., [jwt_auth] invalid_username)
     if (!wpRes.ok) {
       return NextResponse.json(
         { message: data.message || "Invalid email or password." },
         { status: 401 }
       );
     }
-
-    // 3. Set the Secure Cookie with the 'data.token'
     const cookieStore = await cookies();
     cookieStore.set("mio_auth_token", data.token, {
       httpOnly: true,

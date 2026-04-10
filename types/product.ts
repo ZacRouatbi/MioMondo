@@ -90,3 +90,12 @@ export interface ProductsPage {
   totalPages: number;
   total: number;
 }
+export interface WishlistItem {
+  id: number;
+  product_id: number;
+  name: string;      // Add this
+  price: string;     // Add this
+  image: string;  
+  customerId: string | number;   // Add this
+  date_added?: string;
+}

@@ -8,6 +8,7 @@ import AuthModal from "./../ui/auth/AuthModal";
 import SearchModal from "./../ui/SearchModal";
 import { useUser } from "@/hooks/useUser";
 import { useCartContext } from "../cart/CartContext";
+import { useAuthModal } from "../ui/auth/AuthModalContext";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -22,7 +23,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Modals State (Removed isProfileOpen as it's no longer a dropdown)
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { isAuthModalOpen, setIsAuthModalOpen } = useAuthModal();
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const { data: session } = useUser();
