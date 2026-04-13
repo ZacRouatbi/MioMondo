@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getCache, setCache } from "@/lib/core/cache";
 
 async function fetchWooCommerce<T>(
   endpoint: string,
   params: Record<string, string>
 ): Promise<{ data: T; totalPages: number; total: number }> {
   const url = new URL(`${process.env.WC_URL}/wp-json/wc/v3${endpoint}`);
-  Object.keys(params).forEach((key) => url.searchParams.append(key, params[key]));
+
+  Object.keys(params).forEach((key) =>
+    url.searchParams.append(key, params[key])
+  );
 
   const credentials = Buffer.from(
     `${process.env.WC_KEY}:${process.env.WC_SECRET}`
@@ -19,12 +23,22 @@ async function fetchWooCommerce<T>(
   });
 
   if (!response.ok) {
-    throw new Error(`WooCommerce Error: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `WooCommerce Error: ${response.status}`
+    );
   }
 
   const data = await response.json();
-  const totalPages = parseInt(response.headers.get("X-WP-TotalPages") ?? "1", 10);
-  const total = parseInt(response.headers.get("X-WP-Total") ?? "0", 10);
+
+  const totalPages = parseInt(
+    response.headers.get("X-WP-TotalPages") ?? "1",
+    10
+  );
+
+  const total = parseInt(
+    response.headers.get("X-WP-Total") ?? "0",
+    10
+  );
 
   return { data, totalPages, total };
 }
@@ -58,23 +72,42 @@ export async function GET(req: NextRequest) {
     const search = sp.get("search");
     if (search) q.search = search;
 
-    const { data: rawProducts, totalPages, total } = await fetchWooCommerce<any[]>("/products", q);
+    const cacheKey = `products:${Object.entries(q)
+      .sort()
+      .map(([k, v]) => `${k}=${v}`)
+      .join(":")}`;
+
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+
+    const { data: rawProducts, totalPages, total } =
+      await fetchWooCommerce<any[]>("/products", q);
 
     const products = rawProducts.map((p) => ({
       ...p,
       image: p.images?.[0]?.src || null,
     }));
 
-    return NextResponse.json(
-      { products, totalPages, total },
-      {
-        headers: {
-          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
-        },
-      }
-    );
+    const responsePayload = {
+      products,
+      totalPages,
+      total,
+    };
+
+    await setCache(cacheKey, responsePayload, 300); 
+
+    return NextResponse.json(responsePayload, {
+      headers: {
+        "Cache-Control":
+          "public, s-maxage=60, stale-while-revalidate=300",
+      },
+    });
+
   } catch (err) {
     console.error("[GET /api/products]", err);
+
     return NextResponse.json(
       { error: "Failed to fetch products" },
       { status: 500 }

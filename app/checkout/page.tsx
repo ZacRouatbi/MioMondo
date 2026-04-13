@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
 import { ChevronRight } from "lucide-react";
-import { useCart } from "@/hooks/useCart";
+import { useCartContext } from "@/components/cart/CartContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { StepIndicator } from "@/components/checkout/StepIndicator";
@@ -31,7 +31,7 @@ interface CheckoutForm {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, clearCart, isHydrated } = useCart();
+  const { cart, clearCart, isHydrated } = useCartContext();
   
   const [step, setStep] = useState(1);
   const [orderId, setOrderId] = useState<number | null>(null);

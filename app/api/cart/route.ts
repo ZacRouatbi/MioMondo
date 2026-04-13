@@ -1,21 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
+import { secureRequest } from "@/lib/core/gateway";
+import {
+  CartItemsSchema,
+  CheckoutFormSchema,
+} from "@/lib/validation-schemas";
+import { validateCartItems } from "@/lib/cart-validation";
 
 const WC_URL = process.env.WC_URL!;
 const WC_KEY = process.env.WC_KEY!;
 const WC_SECRET = process.env.WC_SECRET!;
 
-const wcAuth = Buffer.from(`${WC_KEY}:${WC_SECRET}`).toString("base64");
+function wcAuth() {
+  return "Basic " + Buffer.from(`${WC_KEY}:${WC_SECRET}`).toString("base64");
+}
 
 async function wcFetch(path: string, options: RequestInit = {}) {
   const url = `${WC_URL.replace(/\/$/, "")}/wp-json/wc/v3${path}`;
+
   const res = await fetch(url, {
     ...options,
     headers: {
-      Authorization: `Basic ${wcAuth}`,
+      Authorization: wcAuth(),
       "Content-Type": "application/json",
       ...(options.headers ?? {}),
     },
-    next: { revalidate: 0 },
+    cache: "no-store",
   });
 
   if (!res.ok) {
@@ -25,83 +34,99 @@ async function wcFetch(path: string, options: RequestInit = {}) {
 
   return res.json();
 }
-
-type WCRawProduct = {
-  id: number;
-  name: string;
-  slug: string;
-  sku: string;
-  price: string;
-  regular_price: string;
-  sale_price: string;
-  price_html: string;
-  on_sale: boolean;
-  featured: boolean;
-  short_description: string;
-  stock_status: "instock" | "outofstock" | "onbackorder";
-  images: { id: number; src: string; alt: string }[];
-  categories: { id: number; name: string; slug: string }[];
-};
-
-function mapProduct(p: WCRawProduct) {
-  return {
-    id: p.id,
-    name: p.name,
-    slug: p.slug,
-    sku: p.sku,
-    price: p.price,
-    regular_price: p.regular_price,
-    sale_price: p.sale_price,
-    price_html: p.price_html,
-    on_sale: p.on_sale,
-    featured: p.featured,
-    short_description: p.short_description,
-    stock_status: p.stock_status,
-    image: p.images?.[0]?.src ?? null,
-    categories: p.categories ?? [],
-  };
-}
-
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const ids = request.nextUrl.searchParams.get("ids");
+    const gate = await secureRequest(req as any, "public");
+    if (!gate.ok) {
+      return NextResponse.json([], { status: 429 });
+    }
+
+    const ids = req.nextUrl.searchParams.get("ids");
     if (!ids) return NextResponse.json({ products: [] });
 
-    const idList = ids.split(",").map((s) => s.trim()).filter(Boolean);
-    const includeParam = idList.map((id) => `include[]=${id}`).join("&");
+    const idList = ids
+      .split(",")
+      .map((s) => Number(s.trim()))
+      .filter(Boolean);
+    const parsed = CartItemsSchema.safeParse(
+      idList.map((id) => ({
+        id,
+        quantity: 1,
+      }))
+    );
 
-    const raw: WCRawProduct[] = await wcFetch(
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid cart data", details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const validation = await validateCartItems(parsed.data);
+
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: "Cart validation failed", issues: validation.errors },
+        { status: 400 }
+      );
+    }
+
+    const includeParam = idList
+      .map((id) => `include[]=${id}`)
+      .join("&");
+
+    const raw = await wcFetch(
       `/products?${includeParam}&per_page=${idList.length}`
     );
 
-    return NextResponse.json({ products: raw.map(mapProduct) });
+    return NextResponse.json({
+      products: raw.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        price: p.price,
+        image: p.images?.[0]?.src ?? null,
+        stock_status: p.stock_status,
+      })),
+    });
   } catch (err) {
-    console.error("[GET /api/cart]", err);
     return NextResponse.json(
       { error: "Failed to validate cart items." },
       { status: 500 }
     );
   }
 }
-
-
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json();
-    const { items, customer } = body as {
-      items: Array<{ id: number; variationId?: number; quantity: number }>;
-      customer: {
-        email: string;
-        firstName: string;
-        lastName: string;
-        address?: string;
-        city?: string;
-        phone?: string;
-      };
-    };
+    const gate = await secureRequest(req as any, "checkout");
+    if (!gate.ok) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        { status: 429 }
+      );
+    }
+
+    const body = await req.json();
+    const parsed = CheckoutFormSchema.safeParse(body.customer);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid customer data",
+          details: parsed.error.flatten(),
+        },
+        { status: 400 }
+      );
+    }
+
+    const customer = parsed.data;
+    const items = body.items;
 
     if (!items?.length) {
-      return NextResponse.json({ error: "Cart is empty." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Cart is empty." },
+        { status: 400 }
+      );
     }
 
     const order = await wcFetch("/orders", {
@@ -109,18 +134,20 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         status: "pending",
         currency: "TND",
-        line_items: items.map((i) => ({
+        line_items: items.map((i: any) => ({
           product_id: i.id,
-          ...(i.variationId ? { variation_id: i.variationId } : {}),
+          ...(i.variationId
+            ? { variation_id: i.variationId }
+            : {}),
           quantity: i.quantity,
         })),
         billing: {
           email: customer.email,
-          first_name: customer.firstName,
-          last_name: customer.lastName,
-          address_1: customer.address ?? "",
-          city: customer.city ?? "",
-          phone: customer.phone ?? "",
+          first_name: customer.first_name,
+          last_name: customer.last_name,
+          address_1: customer.address_1,
+          city: customer.city,
+          phone: customer.phone,
           country: "TN",
         },
       }),
@@ -132,8 +159,7 @@ export async function POST(request: NextRequest) {
       paymentUrl: order.checkout_payment_url,
       total: order.total,
     });
-  } catch (err) {
-    console.error("[POST /api/cart]", err);
+  } catch {
     return NextResponse.json(
       { error: "Failed to create order." },
       { status: 500 }
@@ -141,11 +167,23 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(req: NextRequest) {
   try {
-    const { orderId } = await request.json();
+    const gate = await secureRequest(req as any, "checkout");
+    if (!gate.ok) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        { status: 429 }
+      );
+    }
+
+    const { orderId } = await req.json();
+
     if (!orderId) {
-      return NextResponse.json({ error: "orderId is required." }, { status: 400 });
+      return NextResponse.json(
+        { error: "orderId is required." },
+        { status: 400 }
+      );
     }
 
     await wcFetch(`/orders/${orderId}`, {
@@ -154,8 +192,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (err) {
-    console.error("[DELETE /api/cart]", err);
+  } catch {
     return NextResponse.json(
       { error: "Failed to cancel order." },
       { status: 500 }

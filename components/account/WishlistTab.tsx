@@ -23,6 +23,7 @@ export default function WishlistTab({ customerId }: { customerId: number }) {
   }
 
   if (!items.length) {
+    
     return (
       <div className="text-center py-16 sm:py-20 bg-white rounded-3xl border border-[#EEEEF5] border-dashed">
         <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#F7F7FA] rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5">
@@ -67,7 +68,6 @@ export default function WishlistTab({ customerId }: { customerId: number }) {
               transition={{ duration: 0.28, delay: index * 0.04 }}
               className="bg-white border border-[#EEEEF5] rounded-2xl overflow-hidden relative group transition-all duration-300 hover:shadow-[0_10px_30px_rgba(0,0,0,0.06)]"
             >
-              {/* Remove Button */}
               <button
                 onClick={() => removeFromWishlist(item.product_id)}
                 className="absolute top-2.5 right-2.5 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white shadow-md border border-[#EEEEF5] flex items-center justify-center cursor-pointer text-neutral-400 hover:text-red-500 hover:scale-110 transition-all"
@@ -78,8 +78,7 @@ export default function WishlistTab({ customerId }: { customerId: number }) {
                 </svg>
               </button>
 
-              {/* Product Link */}
-              <Link href={`/products/${item.product_id}`} className="block">
+              <Link href={`/products/${item.slug}`} className="block">
                 <div className="aspect-[4/5] bg-[#F7F7FA] overflow-hidden">
                   {item.image ? (
                     <img
@@ -115,7 +114,6 @@ export default function WishlistTab({ customerId }: { customerId: number }) {
         </AnimatePresence>
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-center gap-4 sm:gap-6 flex-wrap">
           <button
@@ -129,7 +127,6 @@ export default function WishlistTab({ customerId }: { customerId: number }) {
           <div className="flex items-center gap-1.5 sm:gap-2">
             {[...Array(totalPages)].map((_, i) => {
               const p = i + 1;
-              // On mobile, only show nearby pages to avoid overflow
               const isNearby = Math.abs(p - page) <= 1 || p === 1 || p === totalPages;
               const isEllipsis = !isNearby && (p === page - 2 || p === page + 2);
               if (isEllipsis) return (
@@ -162,7 +159,6 @@ export default function WishlistTab({ customerId }: { customerId: number }) {
         </div>
       )}
 
-      {/* Item count indicator */}
       {totalPages > 1 && (
         <p className="text-center text-[11px] text-neutral-300 tracking-wide -mt-2">
           {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, items.length)} sur {items.length} articles

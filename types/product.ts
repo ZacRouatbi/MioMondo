@@ -95,7 +95,8 @@ export interface WishlistItem {
   product_id: number;
   name: string;      // Add this
   price: string;     // Add this
-  image: string;  
+  image: string; 
+  slug: string;      // Add this 
   customerId: string | number;   // Add this
   date_added?: string;
 }

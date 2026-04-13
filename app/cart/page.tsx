@@ -1,13 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { useCart } from "@/hooks/useCart";
-
+import { useCartContext } from "@/components/cart/CartContext";
+import { motion, useScroll } from "framer-motion";
 export default function CartPage() {
-  const { cart, updateQty, removeItem, applyPromo, removePromo } = useCart();
+  const { cart, updateQty, removeItem, applyPromo, removePromo } = useCartContext();
   const { items, subtotal, discount, shipping, total, promoCode } = cart;
 
   const [promoInput, setPromoInput] = useState("");
@@ -28,6 +28,18 @@ export default function CartPage() {
     setPromoInput("");
     setPromoMessage(null);
   };
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const { scrollYProgress } = useScroll();
+
+
+useEffect(() => {
+  const handleScroll = () => {
+    setShowScrollTop(window.scrollY > 300);
+  };
+
+  window.addEventListener("scroll", handleScroll);
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
 
   return (
     <>
@@ -260,6 +272,53 @@ export default function CartPage() {
               </div>
             </div>
           </div>
+        )}
+        {showScrollTop && (
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            aria-label="Scroll to top"
+            className="
+              fixed bottom-6 right-6 z-50
+              w-12 h-12 rounded-full
+              flex items-center justify-center
+              bg-jet text-snow
+              shadow-lg
+              transition-all duration-300
+              hover:scale-110 hover:bg-[#FFCA68] hover:text-jet
+              active:scale-95
+            "
+          >
+            {/* Circular progress ring */}
+            <svg className="absolute w-12 h-12 -rotate-90">
+              <circle
+                cx="24"
+                cy="24"
+                r="20"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="none"
+                className="text-white/10"
+              />
+              <motion.circle
+                cx="24"
+                cy="24"
+                r="20"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="none"
+                className="text-[#FFCA68]"
+                strokeLinecap="round"
+                style={{
+                  pathLength: scrollYProgress,
+                }}
+              />
+            </svg>
+
+            {/* Center arrow */}
+            <span className="relative text-lg leading-none flex items-center justify-center w-full h-full">
+              ↑
+            </span>
+          </button>
         )}
       </main>
 

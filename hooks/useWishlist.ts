@@ -3,21 +3,25 @@ import type { WishlistItem } from "@/types/product";
 
 export function useWishlist() {
   const queryClient = useQueryClient();
-  
+
   // 1. Fetch Wishlist
   const { data: wishlistItems = [], isLoading } = useQuery<WishlistItem[]>({
     queryKey: ["wishlist"],
     queryFn: async () => {
       const res = await fetch("/api/account/wishlist");
       if (!res.ok) throw new Error("Failed to fetch wishlist");
-      
+
       const data = await res.json();
-      // Since our custom PHP returns a clean array, we just return it
-      return (Array.isArray(data) ? data : []) as WishlistItem[];
+      const normalized = (Array.isArray(data) ? data : []).map((item: any) => {
+        return {
+          ...item,
+          product_id: item.product_id ?? item.id, // fallback safety
+          slug: item.slug ?? "", // fallback safety
+        };
+      });
+      return normalized as WishlistItem[];
     },
   });
-
-  // 2. Add to Wishlist
   const addMutation = useMutation({
     mutationFn: async (productId: number) => {
       const res = await fetch("/api/account/wishlist", {
@@ -25,30 +29,39 @@ export function useWishlist() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId }),
       });
+
       if (!res.ok) throw new Error("Could not add to wishlist");
+
       return res.json();
     },
+
     onMutate: async (productId) => {
+
       await queryClient.cancelQueries({ queryKey: ["wishlist"] });
-      const previousWishlist = queryClient.getQueryData<WishlistItem[]>(["wishlist"]);
+
+      const previousWishlist =
+        queryClient.getQueryData<WishlistItem[]>(["wishlist"]);
 
       // Optimistic Update
       queryClient.setQueryData(["wishlist"], (old: WishlistItem[] = []) => [
         ...old,
-        { 
-          id: Date.now(), // Temporary ID
+        {
+          id: Date.now(),
           product_id: productId,
-          name: "Chargement...", 
+          name: "Chargement...",
           price: "",
-          image: "" 
-        }, 
+          image: "",
+        },
       ]);
 
       return { previousWishlist };
     },
+
     onError: (err, productId, context) => {
+      console.error("❌ ADD ERROR:", err);
       queryClient.setQueryData(["wishlist"], context?.previousWishlist);
     },
+
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["wishlist"] });
     },
@@ -57,33 +70,43 @@ export function useWishlist() {
   // 3. Remove from Wishlist
   const removeMutation = useMutation({
     mutationFn: async (productId: number) => {
-      const res = await fetch(`/api/account/wishlist?productId=${productId}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/account/wishlist?productId=${productId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
       if (!res.ok) throw new Error("Could not remove from wishlist");
+
       return res.json();
     },
+
     onMutate: async (productId) => {
       await queryClient.cancelQueries({ queryKey: ["wishlist"] });
-      const previousWishlist = queryClient.getQueryData<WishlistItem[]>(["wishlist"]);
 
-      // Optimistic Update (UI removes it immediately)
+      const previousWishlist =
+        queryClient.getQueryData<WishlistItem[]>(["wishlist"]);
       queryClient.setQueryData(["wishlist"], (old: WishlistItem[] = []) =>
         old.filter((item) => item.product_id !== productId)
       );
 
       return { previousWishlist };
     },
+
     onError: (err, productId, context) => {
+      console.error("❌ REMOVE ERROR:", err);
       queryClient.setQueryData(["wishlist"], context?.previousWishlist);
     },
+
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["wishlist"] });
     },
   });
 
-  const isInWishlist = (productId: number) => 
-    wishlistItems.some((item) => item.product_id === productId);
+  const isInWishlist = (productId: number) => {
+    return wishlistItems.some((item) => item.product_id === productId);
+  };
 
   return {
     wishlistItems,

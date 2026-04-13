@@ -29,6 +29,8 @@ export function WishlistButton({ productId }: { productId: number }) {
       removeFromWishlist(productId);
     } else {
       addToWishlist(productId);
+      console.log("ADDING PRODUCT ID:", productId);
+      
     }
   };
 

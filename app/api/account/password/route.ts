@@ -1,71 +1,115 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { getCustomerIdFromToken } from "@/lib/auth-utils";
+import { secureRequest } from "@/lib/core/gateway";
+import { z } from "zod";
 
 const WC_URL = process.env.WC_URL!;
 const WC_KEY = process.env.WC_KEY!;
 const WC_SECRET = process.env.WC_SECRET!;
 
-const getAuthUrl = (endpoint: string) => 
-  `${WC_URL}/wp-json/${endpoint}?consumer_key=${WC_KEY}&consumer_secret=${WC_SECRET}`;
+function wcAuth() {
+  return (
+    "Basic " +
+    Buffer.from(`${WC_KEY}:${WC_SECRET}`).toString("base64")
+  );
+}
+const PasswordChangeSchema = z.object({
+  current: z.string().min(1, "Current password is required"),
+  next: z.string().min(6, "New password must be at least 6 characters"),
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("mio_auth_token")?.value;
+    const gateway = await secureRequest(req as any, "account");
+    if (!gateway.ok) {
+      return NextResponse.json(
+        { message: "Too many requests" },
+        { status: 429 }
+      );
+    }
+    const customerId = await getCustomerIdFromToken(req);
+    if (!customerId) {
+      return NextResponse.json(
+        { message: "Session expirée" },
+        { status: 401 }
+      );
+    }
+    const body = await req.json();
+    const parsed = PasswordChangeSchema.safeParse(body);
 
-    if (!token) {
-      return NextResponse.json({ message: "Session expirée" }, { status: 401 });
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          message: "Invalid input",
+          errors: parsed.error.flatten(),
+        },
+        { status: 400 }
+      );
     }
 
-    const { current, next } = await req.json();
-    const wpMeRes = await fetch(`${WC_URL}/wp-json/wp/v2/users/me`, {
-      headers: { 
-        "Authorization": `Bearer ${token}`,
-        "Connection": "keep-alive" 
-      },
-    });
+    const { current, next } = parsed.data;
+    const customerRes = await fetch(
+      `${WC_URL}/wp-json/wc/v3/customers/${customerId}`,
+      {
+        headers: {
+          Authorization: wcAuth(),
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+      }
+    );
 
-    if (!wpMeRes.ok) {
-      return NextResponse.json({ message: "Utilisateur non identifié" }, { status: 401 });
+    if (!customerRes.ok) {
+      return NextResponse.json(
+        { message: "Données client introuvables" },
+        { status: 404 }
+      );
     }
 
-    const wpUserData = await wpMeRes.json();
-    const customerId = wpUserData.id;
-    const wcCustomerRes = await fetch(getAuthUrl(`wc/v3/customers/${customerId}`), {
-      headers: { "Connection": "keep-alive" }
-    });
-
-    if (!wcCustomerRes.ok) {
-      return NextResponse.json({ message: "Données client introuvables" }, { status: 404 });
-    }
-
-    const { email: userEmail } = await wcCustomerRes.json();
-    const verifyRes = await fetch(`${WC_URL}/wp-json/jwt-auth/v1/token`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: userEmail, password: current }),
-    });
+    const customer = await customerRes.json();
+    const verifyRes = await fetch(
+      `${WC_URL}/wp-json/jwt-auth/v1/token`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: customer.email,
+          password: current,
+        }),
+      }
+    );
 
     if (!verifyRes.ok) {
-      return NextResponse.json({ message: "Mot de passe actuel incorrect" }, { status: 403 });
+      return NextResponse.json(
+        { message: "Mot de passe actuel incorrect" },
+        { status: 403 }
+      );
     }
-    const res = await fetch(getAuthUrl(`wc/v3/customers/${customerId}`), {
-      method: "POST", 
-      headers: { 
-        "Content-Type": "application/json",
-        "X-HTTP-Method-Override": "PUT" 
-      },
-      body: JSON.stringify({ password: next }),
-    });
+    const updateRes = await fetch(
+      `${WC_URL}/wp-json/wc/v3/customers/${customerId}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: wcAuth(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password: next }),
+      }
+    );
 
-    if (!res.ok) {
-      return NextResponse.json({ message: "Erreur lors de la mise à jour" }, { status: 500 });
+    if (!updateRes.ok) {
+      return NextResponse.json(
+        { message: "Erreur lors de la mise à jour" },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ ok: true });
 
   } catch (error) {
-    console.error("Password API Error:", error);
-    return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Erreur serveur" },
+      { status: 500 }
+    );
   }
 }
