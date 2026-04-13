@@ -12,7 +12,6 @@ interface SearchModalProps {
   onClose: () => void;
 }
 
-// 1. Internal fetcher pointing to our local API to avoid 405/CORS errors
 const fetchSearchResults = async (query: string): Promise<Product[]> => {
   if (!query) return [];
   const response = await fetch(`/api/products/search?q=${encodeURIComponent(query)}`);

@@ -6,28 +6,46 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useCartContext } from "@/components/cart/CartContext";
 import { motion, useScroll } from "framer-motion";
+import { PromoCodeSchema } from "@/lib/validation-schemas";
 export default function CartPage() {
   const { cart, updateQty, removeItem, applyPromo, removePromo } = useCartContext();
   const { items, subtotal, discount, shipping, total, promoCode } = cart;
 
-  const [promoInput, setPromoInput] = useState("");
-  const [promoMessage, setPromoMessage] = useState<{ text: string; ok: boolean } | null>(null);
-  const [promoLoading, setPromoLoading] = useState(false);
+const [promoInput, setPromoInput] = useState("");
+const [promoMessage, setPromoMessage] = useState<{ text: string; ok: boolean } | null>(null);
+const [promoLoading, setPromoLoading] = useState(false);
+const [promoError, setPromoError] = useState<string | null>(null); // ← add this
+const handlePromoChange = (val: string) => {
+  setPromoInput(val);
+  // Clear format error as user types
+  if (promoError) {
+    const result = PromoCodeSchema.safeParse({ code: val.trim() });
+    if (result.success) setPromoError(null);
+  }
+};
 
-  const handleApplyPromo = async () => {
-    if (!promoInput.trim()) return;
-    setPromoLoading(true);
-    setPromoMessage(null);
-    const result = await applyPromo(promoInput.trim());
-    setPromoMessage({ text: result.message, ok: result.success });
-    setPromoLoading(false);
-  };
+const handleApplyPromo = async () => {
+  if (!promoInput.trim()) return;
+  const parsed = PromoCodeSchema.safeParse({ code: promoInput.trim() });
+  if (!parsed.success) {
+    setPromoError(parsed.error.flatten().fieldErrors.code?.[0] ?? "Invalid code");
+    return;
+  }
 
-  const handleRemovePromo = () => {
-    removePromo();
-    setPromoInput("");
-    setPromoMessage(null);
-  };
+  setPromoError(null);
+  setPromoLoading(true);
+  setPromoMessage(null);
+  const result = await applyPromo(promoInput.trim());
+  setPromoMessage({ text: result.message, ok: result.success });
+  setPromoLoading(false);
+};
+
+const handleRemovePromo = () => {
+  removePromo();
+  setPromoInput("");
+  setPromoMessage(null);
+  setPromoError(null); // ← clear this too
+};
   const [showScrollTop, setShowScrollTop] = useState(false);
   const { scrollYProgress } = useScroll();
 
@@ -202,47 +220,59 @@ useEffect(() => {
               </div>
 
               {/* Promo code */}
-              <div>
-                <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#1a1a2e]/40 mb-3">
-                  Promo Code
-                </p>
-                {promoCode ? (
-                  <div className="flex items-center justify-between border border-[#FFCA68]/50 bg-[#FFCA68]/10 rounded-[3px] px-4 py-2.5">
-                    <span className="text-[13px] font-light text-[#1a1a2e]/70 tracking-wider">{promoCode}</span>
+            <div>
+              <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#1a1a2e]/40 mb-3">
+                Promo Code
+              </p>
+              {promoCode ? (
+                <div className="flex items-center justify-between border border-[#FFCA68]/50 bg-[#FFCA68]/10 rounded-[3px] px-4 py-2.5">
+                  <span className="text-[13px] font-light text-[#1a1a2e]/70 tracking-wider">{promoCode}</span>
+                  <button
+                    onClick={handleRemovePromo}
+                    className="text-[11px] font-semibold tracking-[0.14em] uppercase text-[#1a1a2e]/40 hover:text-[#1a1a2e] transition-colors duration-150"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={promoInput}
+                      onChange={(e) => handlePromoChange(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => e.key === "Enter" && handleApplyPromo()}
+                      placeholder="Enter code"
+                      maxLength={20}
+                      className={`flex-1 bg-transparent border rounded-[3px] px-4 py-2.5 text-[13px] font-light text-[#1a1a2e] placeholder:text-[#1a1a2e]/25 focus:outline-none transition-colors duration-150 ${
+                        promoError
+                          ? "border-red-400 focus:border-red-400"
+                          : "border-[#1a1a2e]/15 focus:border-[#1a1a2e]/40"
+                      }`}
+                    />
                     <button
-                      onClick={handleRemovePromo}
-                      className="text-[11px] font-semibold tracking-[0.14em] uppercase text-[#1a1a2e]/40 hover:text-[#1a1a2e] transition-colors duration-150"
+                      onClick={handleApplyPromo}
+                      disabled={promoLoading}
+                      className="px-5 py-2.5 border border-[#1a1a2e]/20 rounded-[3px] text-[11px] font-semibold tracking-[0.16em] uppercase text-[#1a1a2e]/60 hover:border-[#1a1a2e]/50 hover:text-[#1a1a2e] transition-all duration-150 whitespace-nowrap disabled:opacity-40"
                     >
-                      Remove
+                      {promoLoading ? "..." : "Apply"}
                     </button>
                   </div>
-                ) : (
-                  <>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={promoInput}
-                        onChange={(e) => setPromoInput(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleApplyPromo()}
-                        placeholder="Enter code"
-                        className="flex-1 bg-transparent border border-[#1a1a2e]/15 rounded-[3px] px-4 py-2.5 text-[13px] font-light text-[#1a1a2e] placeholder:text-[#1a1a2e]/25 focus:outline-none focus:border-[#1a1a2e]/40 transition-colors duration-150"
-                      />
-                      <button
-                        onClick={handleApplyPromo}
-                        disabled={promoLoading}
-                        className="px-5 py-2.5 border border-[#1a1a2e]/20 rounded-[3px] text-[11px] font-semibold tracking-[0.16em] uppercase text-[#1a1a2e]/60 hover:border-[#1a1a2e]/50 hover:text-[#1a1a2e] transition-all duration-150 whitespace-nowrap disabled:opacity-40"
-                      >
-                        {promoLoading ? "..." : "Apply"}
-                      </button>
-                    </div>
-                    {promoMessage && (
-                      <p className={`mt-2 text-[11px] tracking-wide ${promoMessage.ok ? "text-[#1a1a2e]/50" : "text-red-400"}`}>
-                        {promoMessage.text}
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
+
+                  {/* Format error (client-side Zod) */}
+                  {promoError && (
+                    <p className="mt-2 text-[11px] tracking-wide text-red-400">{promoError}</p>
+                  )}
+
+                  {/* Server response (valid/invalid code from API) */}
+                  {!promoError && promoMessage && (
+                    <p className={`mt-2 text-[11px] tracking-wide ${promoMessage.ok ? "text-[#1a1a2e]/50" : "text-red-400"}`}>
+                      {promoMessage.text}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
 
               {/* Checkout CTA */}
               <div className="flex flex-col gap-3 mt-auto">

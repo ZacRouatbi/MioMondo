@@ -44,9 +44,9 @@ export default function AboutPage() {
         </h1>
 
         <p className="text-jet/60 text-[15px] font-light leading-[1.8] mb-10 max-w-[42ch]">
-          Mio Mondo was born from a belief that your home should feel like a
-          sanctuary — not a showroom. We source each piece with a careful eye
-          for material, maker, and meaning.
+          Mio Mondo est né de la conviction que votre maison doit être un
+          sanctuaire, et non une salle d'exposition. Nous sélectionnons chaque pièce avec le plus grand soin
+          en privilégiant le matériau, le créateur et la signification.
         </p>
 
         <a
@@ -114,14 +114,11 @@ export default function AboutPage() {
             <em className="italic">art of living</em>
           </h2>
 
-          <p className="text-[#1a1a2e]/60 text-[14px] font-light leading-[1.9] mb-4 max-w-[44ch]">
-            Our founder spent years traveling through Europe and North Africa,
-            collecting objects that told a story — ceramics from Nabeul, linens
-            from Brittany, hand-blown glass from Morocco.
+          <p className="text-[#1a1a2e]/60 text-[14px] font-light leading-[1.9] mb-4 max-w-[70ch]">
+           Conçus avec précision, pensés comme un havre de paix. Notre sélection ne consiste pas à collectionner des objets, mais à définir des espaces empreints de fonctionnalité et de luxe discret. Nous croyons au pouvoir des objets simples et beaux pour sublimer le quotidien et transformer une maison en un véritable foyer. 
           </p>
           <p className="text-[#1a1a2e]/60 text-[14px] font-light leading-[1.9] max-w-[44ch]">
-            What began as a personal obsession became a curation practice, and
-            eventually, a home.
+            Une sélection personnelle de céramiques raffinées, de linge de maison exquis et de verrerie artisanale – chaque pièce étant choisie pour raconter sa propre histoire, en toute simplicité, entre vos murs.
           </p>
         </div>
 
