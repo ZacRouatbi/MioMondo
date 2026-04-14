@@ -19,7 +19,6 @@ export async function checkRateLimit(
 
   const now = Date.now();
   const record = memoryMap.get(key);
-
   if (!record || now > record.reset) {
     memoryMap.set(key, {
       count: 1,

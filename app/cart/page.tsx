@@ -14,10 +14,9 @@ export default function CartPage() {
 const [promoInput, setPromoInput] = useState("");
 const [promoMessage, setPromoMessage] = useState<{ text: string; ok: boolean } | null>(null);
 const [promoLoading, setPromoLoading] = useState(false);
-const [promoError, setPromoError] = useState<string | null>(null); // ← add this
+const [promoError, setPromoError] = useState<string | null>(null); 
 const handlePromoChange = (val: string) => {
   setPromoInput(val);
-  // Clear format error as user types
   if (promoError) {
     const result = PromoCodeSchema.safeParse({ code: val.trim() });
     if (result.success) setPromoError(null);
@@ -44,7 +43,7 @@ const handleRemovePromo = () => {
   removePromo();
   setPromoInput("");
   setPromoMessage(null);
-  setPromoError(null); // ← clear this too
+  setPromoError(null); 
 };
   const [showScrollTop, setShowScrollTop] = useState(false);
   const { scrollYProgress } = useScroll();

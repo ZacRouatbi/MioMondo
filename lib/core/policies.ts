@@ -32,7 +32,7 @@ export const ROUTE_POLICIES: Record<RouteType, RoutePolicy> = {
 
   login: {
     limit: 5,
-    windowSec: 900,
+    windowSec: 450,
     mode: "strict",
   },
 

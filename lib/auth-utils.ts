@@ -8,7 +8,6 @@ import { NextRequest } from "next/server";
  */
 export async function getCustomerIdFromToken(request: NextRequest): Promise<string | null> {
   try {
-    // Get token from mio_auth_token cookie (set by auth/login)
     const cookieHeader = request.headers.get("cookie");
     if (!cookieHeader) return null;
 
@@ -16,9 +15,6 @@ export async function getCustomerIdFromToken(request: NextRequest): Promise<stri
     if (!tokenMatch || !tokenMatch[1]) return null;
 
     const token = tokenMatch[1];
-    
-    // For now, we need to validate with WooCommerce JWT endpoint
-    // In production, parse JWT directly after implementing proper JWT signing
     const wc_url = process.env.WC_URL;
     if (!wc_url) {
       console.error("WC_URL not configured");
@@ -36,8 +32,6 @@ export async function getCustomerIdFromToken(request: NextRequest): Promise<stri
     );
 
     if (!validationRes.ok) return null;
-
-    // Fetch user info to get customer ID
     const userRes = await fetch(`${wc_url}/wp-json/wp/v2/users/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });

@@ -1,125 +1,127 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Check, Copy, AlertCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import { Lock, Check, AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Lora } from "next/font/google";
+import { useResetPassword } from "@/hooks/useAccount";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
 const lora = Lora({ subsets: ["latin"], style: ["normal", "italic"], weight: ["400", "500"], display: "swap" });
 
-export default function ResetSuccessPage() {
+export default function ResetPasswordPage() {
   const params = useSearchParams();
   const router = useRouter();
-  const password = params.get("p");
-  const error = params.get("error");
+  const token = params.get("token");
+  
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const { resetPassword, isResetting, error, isSuccess } = useResetPassword();
 
-  const [copied, setCopied] = useState(false);
-  useEffect(() => {
-    if (password) {
-      window.history.replaceState({}, "", "/reset-success");
-    }
-  }, [password]);
-
-  const handleCopy = async () => {
-    if (!password) return;
-    await navigator.clipboard.writeText(password);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    resetPassword({ token, password });
   };
 
-  const errorMessage =
-    error === "expired"
-      ? "Ce lien a expiré. Les liens de réinitialisation sont valables 1 heure."
-      : error === "invalid"
-      ? "Lien invalide."
-      : error === "update"
-      ? "Erreur lors de la mise à jour. Veuillez réessayer."
-      : null;
+  if (!token) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-500">Lien de réinitialisation invalide ou manquant.</p>
+      </div>
+    );
+  }
 
   return (
     <>
-    <Navbar/>
-    <div className="min-h-screen bg-snow flex items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-md bg-snow border border-snow rounded-2xl p-10 text-center shadow-sm"
-      >
-        {errorMessage ? (
-          <>
-            <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-6">
-              <AlertCircle size={26} className="text-red-400" />
-            </div>
-            <h1 className={`${lora.className} text-2xl font-normal text-[#1a1a2e] mb-3`}>
-              Lien invalide
-            </h1>
-            <p className="text-[#1a1a2e]/50 text-[14px] leading-relaxed mb-8">
-              {errorMessage}
-            </p>
-            <button
-              onClick={() => router.push("/")}
-              className="w-full bg-jet text-snow py-3.5 rounded-xl text-[13px] font-semibold tracking-wider hover:bg-jet transition-colors"
-            >
-              Retour à l'accueil
-            </button>
-          </>
-        ) : (
-          <>
-            <div className="w-14 h-14 rounded-full bg-jet/15 flex items-center justify-center mx-auto mb-6">
-              <Check size={26} className="text-[#FFCA68]" />
-            </div>
-            <h1 className={`${lora.className} text-2xl font-normal text-[#1a1a2e] mb-2`}>
-              Mot de passe activé
-            </h1>
-            <p className="text-jet/50 text-[14px] leading-relaxed mb-8">
-              Votre nouveau mot de passe est prêt. Copiez-le et connectez-vous.
-            </p>
-            <div className="flex items-center gap-0 bg-[#1a1a2e] rounded-xl overflow-hidden mb-6">
-              <span className="flex-1 font-mono text-white text-[17px] font-bold tracking-widest px-5 py-4 select-all">
-                {password}
-              </span>
-              <button
-                onClick={handleCopy}
-                className={`px-4 py-4 transition-colors shrink-0 border-l border-white/10 ${
-                  copied
-                    ? "text-[#FFCA68]"
-                    : "text-snow/40 hover:text-snow"
-                }`}
-                title="Copier le mot de passe"
-              >
-                {copied ? <Check size={18} /> : <Copy size={18} />}
-              </button>
-            </div>
+      <Navbar />
+      <div className="min-h-screen bg-[#F8F8F8] flex items-center justify-center px-4 py-20">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md bg-white border border-[#EEEEF5] rounded-2xl p-8 sm:p-10 shadow-sm"
+        >
+          <AnimatePresence mode="wait">
+            {!isSuccess ? (
+              <motion.div key="form" exit={{ opacity: 0, scale: 0.95 }}>
+                <h1 className={`${lora.className} text-[28px] text-jet mb-2`}>
+                  Nouveau <em>mot de passe</em>
+                </h1>
+                <p className="text-jet/50 text-[14px] mb-8">
+                  Choisissez un mot de passe sécurisé pour votre compte.
+                </p>
 
-            {copied && (
-              <motion.p
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-[12px] text-[#1a1a2e]/40 mb-6 -mt-2"
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div className="relative">
+                    <label className="text-[11px] font-bold tracking-widest uppercase text-jet/40 mb-2 block">
+                      Nouveau mot de passe
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={8}
+                        className="w-full bg-[#F7F7FA] border border-[#EEEEF5] rounded-xl px-5 py-3.5 text-[14px] outline-none focus:border-jet/20 transition-all"
+                        placeholder="••••••••"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-jet/30 hover:text-jet transition-colors"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="flex items-center gap-2 text-red-500 bg-red-50 p-3 rounded-lg text-[12px]">
+                      <AlertCircle size={14} />
+                      <span>{(error as Error).message}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isResetting || password.length < 8}
+                    className="w-full bg-jet text-white py-4 rounded-xl text-[13px] font-bold tracking-widest uppercase hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isResetting ? <Loader2 size={18} className="animate-spin" /> : "Réinitialiser"}
+                  </button>
+                </form>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="success"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-4"
               >
-                Copié dans le presse-papiers ✓
-              </motion.p>
+                <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Check size={32} className="text-green-500" />
+                </div>
+                <h2 className={`${lora.className} text-[26px] text-jet mb-3`}>
+                  C&apos;est <em>fait !</em>
+                </h2>
+                <p className="text-jet/50 text-[14px] mb-8">
+                  Votre mot de passe a été mis à jour avec succès. Vous pouvez maintenant vous connecter.
+                </p>
+                <button
+                  onClick={() => router.push("/")} // adjust path if needed
+                  className="w-full bg-jet text-white py-4 rounded-xl text-[13px] font-bold tracking-widest uppercase hover:opacity-90 transition-all"
+                >
+                  Se connecter
+                </button>
+              </motion.div>
             )}
-
-            <button
-              onClick={() => router.push("/")}
-              className="w-full bg-jet text-snow py-3.5 rounded-xl text-[13px] font-semibold tracking-wider hover:bg-jet transition-colors"
-            >
-              Se connecter
-            </button>
-
-            <p className="mt-5 text-[11px] text-[#1a1a2e]/30 leading-relaxed">
-              Pour votre sécurité, modifiez ce mot de passe depuis votre espace client après connexion.
-            </p>
-          </>
-        )}
-      </motion.div>
-    </div>
-    <Footer/>
+          </AnimatePresence>
+        </motion.div>
+      </div>
+      <Footer />
     </>
   );
 }

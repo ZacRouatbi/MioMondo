@@ -17,13 +17,6 @@ const ResetSchema = z.object({
   email: z.string().email("Invalid email").toLowerCase().trim(),
 });
 
-function generatePassword(length = 12): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
-  return Array.from({ length }, () =>
-    chars.charAt(Math.floor(Math.random() * chars.length))
-  ).join("");
-}
-
 export async function POST(req: Request) {
   try {
     const gateway = await secureRequest(req as any, "auth");
@@ -45,7 +38,6 @@ export async function POST(req: Request) {
 
     const { email } = parsed.data;
 
-    // Always return ok to avoid account enumeration
     const searchRes = await fetch(
       `${WC_URL}/wp-json/wc/v3/customers?email=${encodeURIComponent(email)}&role=customer`,
       { headers: { Authorization: wcAuth() }, cache: "no-store" }
@@ -59,15 +51,17 @@ export async function POST(req: Request) {
     }
 
     const customer = customers[0];
-    const newPassword = generatePassword();
 
-    // Sign a short-lived JWT containing the pending password + customer id.
-    // The password is NOT applied to WooCommerce yet — only after the user
-    // clicks "Copier & Activer" in the email (hits /api/auth/reset-password/confirm).
+    // --- SECURITY ADDITION ---
+    // We capture the current modification date. 
+    // If the password changes, this date will change in WooCommerce, 
+    // making the token "mismatch" and therefore invalid.
+    const lastModified = customer.date_modified;
+
     const token = await new SignJWT({
       customerId: customer.id,
       email,
-      newPassword,
+      lastModified, // Included in payload
     })
       .setProtectedHeader({ alg: "HS256" })
       .setExpirationTime("1h")
@@ -76,12 +70,12 @@ export async function POST(req: Request) {
     await sendResetEmail({
       to: email,
       firstName: customer.first_name || "Client",
-      newPassword,
       token,
     });
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (error) {
+    console.error("Reset Error:", error);
     return NextResponse.json({ message: "Erreur serveur." }, { status: 500 });
   }
 }

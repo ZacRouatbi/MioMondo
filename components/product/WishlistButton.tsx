@@ -39,8 +39,8 @@ export function WishlistButton({ productId }: { productId: number }) {
       aria-label={isActive ? "Retirer des favoris" : "Ajouter aux favoris"}
       className={`w-12 h-12 sm:w-14 sm:h-12 rounded-xl border transition-all duration-300 flex items-center justify-center flex-shrink-0 group ${
         isActive
-          ? "bg-[#FFCA68]/20 border-[#FFCA68] text-jet shadow-sm"
-          : "bg-white border-[#E6E6FA] text-jet/40 hover:border-[#FFCA68] hover:text-jet"
+          ? "bg-jet/20 border-[#FFCA68] text-jet shadow-sm"
+          : "bg-snow border-[#E6E6FA] text-jet/40 hover:border-[#FFCA68] hover:text-jet"
       } ${isPending ? "opacity-70 cursor-not-allowed" : "cursor-pointer active:scale-95"}`}
     >
       <svg

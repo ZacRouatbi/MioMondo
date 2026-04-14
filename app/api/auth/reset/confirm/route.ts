@@ -1,38 +1,77 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
+import { z } from "zod";
 
 const WC_URL = process.env.WC_URL!;
 const WC_KEY = process.env.WC_KEY!;
 const WC_SECRET = process.env.WC_SECRET!;
 const JWT_SECRET = new TextEncoder().encode(process.env.RESET_TOKEN_SECRET!);
-const SITE_URL = process.env.SITE_URL ?? "https://miomondohome.com";
 
 function wcAuth() {
   return "Basic " + Buffer.from(`${WC_KEY}:${WC_SECRET}`).toString("base64");
 }
 
-// GET /api/auth/reset-password/confirm?token=...
-// Called when the user clicks "Copier & Activer" in the email.
-// Verifies the signed token, applies the new password to WooCommerce,
-// then redirects to /reset-success?p=<password> so the page can show
-// the copy UI. The password is in the URL only for that one redirect —
-// the page should NOT be indexable (noindex already set in metadata).
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const token = searchParams.get("token");
+const UpdatePasswordSchema = z.object({
+  token: z.string().min(1, "Token requis"),
+  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+});
 
-  if (!token) {
-    return NextResponse.redirect(`${SITE_URL}/reset-success?error=invalid`);
-  }
-
+export async function POST(req: Request) {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    const { customerId, newPassword } = payload as {
-      customerId: number;
-      newPassword: string;
-    };
+    const body = await req.json();
+    const parsed = UpdatePasswordSchema.safeParse(body);
 
-    // Apply the password — this is the ONE place it actually gets written
+    if (!parsed.success) {
+      return NextResponse.json(
+        { message: "Données invalides.", errors: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const { token, password } = parsed.data;
+
+    // 1. Verify and Extract the JWT Token
+    let customerId: number;
+    let tokenTimestamp: string;
+
+    try {
+      const { payload } = await jwtVerify(token, JWT_SECRET);
+      const data = payload as { customerId: number; lastModified: string };
+      customerId = data.customerId;
+      tokenTimestamp = data.lastModified;
+    } catch (err) {
+      return NextResponse.json(
+        { message: "Le lien a expiré ou est invalide." },
+        { status: 401 }
+      );
+    }
+
+    // 2. FETCH CURRENT CUSTOMER TO CHECK FOR SINGLE-USE
+    // We use 'cache: no-store' to ensure we get the real data from DB
+    const checkRes = await fetch(
+      `${WC_URL}/wp-json/wc/v3/customers/${customerId}`,
+      { headers: { Authorization: wcAuth() }, cache: "no-store" }
+    );
+
+    if (!checkRes.ok) {
+      return NextResponse.json(
+        { message: "Utilisateur introuvable." },
+        { status: 404 }
+      );
+    }
+
+    const currentCustomer = await checkRes.json();
+
+    // KILL SWITCH: If the date_modified has changed since the token was created,
+    // it means the password (or profile) was already updated.
+    if (currentCustomer.date_modified !== tokenTimestamp) {
+      return NextResponse.json(
+        { message: "Ce lien a déjà été utilisé pour réinitialiser le mot de passe." },
+        { status: 401 }
+      );
+    }
+
+    // 3. Apply the NEW password to WooCommerce
     const updateRes = await fetch(
       `${WC_URL}/wp-json/wc/v3/customers/${customerId}`,
       {
@@ -41,21 +80,29 @@ export async function GET(req: Request) {
           Authorization: wcAuth(),
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ password: newPassword }),
+        body: JSON.stringify({ password: password }),
       }
     );
 
     if (!updateRes.ok) {
-      return NextResponse.redirect(`${SITE_URL}/reset-success?error=update`);
+      const errorData = await updateRes.json();
+      console.error("WooCommerce Error:", errorData);
+      return NextResponse.json(
+        { message: "Erreur lors de la mise à jour du mot de passe." },
+        { status: 500 }
+      );
     }
 
-    // Redirect to the success page, passing the password so the user can copy it.
-    // Use a short-lived query param — the page itself should have noindex.
-    const successUrl = new URL(`${SITE_URL}/reset-success`);
-    successUrl.searchParams.set("p", newPassword);
-    return NextResponse.redirect(successUrl.toString());
-  } catch {
-    // Token expired or tampered
-    return NextResponse.redirect(`${SITE_URL}/reset-success?error=expired`);
+    return NextResponse.json({ 
+      success: true, 
+      message: "Votre mot de passe a été mis à jour avec succès." 
+    });
+
+  } catch (error) {
+    console.error("Confirm Reset Error:", error);
+    return NextResponse.json(
+      { message: "Erreur serveur." }, 
+      { status: 500 }
+    );
   }
 }

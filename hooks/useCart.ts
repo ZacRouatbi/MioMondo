@@ -18,6 +18,7 @@ function computeTotals(
 ): Pick<Cart, "subtotal" | "discount" | "shipping" | "total"> {
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const discount = promoCode ? Math.round(subtotal * discountPercent) / 100 : 0;
+  // Note: Shipping is usually calculated on the price AFTER discount
   const shipping = subtotal - discount >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_RATE;
   const total = subtotal - discount + shipping;
   return { subtotal, discount, shipping, total };
@@ -29,10 +30,16 @@ type State = {
   discountPercent: number;
 };
 
-function reducer(state: State, action: CartAction): State {
+// Extending CartAction slightly to handle full hydration
+type ExtendedCartAction = CartAction | { type: "HYDRATE_ALL"; payload: State };
+
+function reducer(state: State, action: ExtendedCartAction): State {
   switch (action.type) {
     case "HYDRATE":
       return { ...state, items: action.payload };
+
+    case "HYDRATE_ALL":
+      return { ...action.payload };
 
     case "ADD_ITEM": {
       const existing = state.items.find((i) => isSameItem(i, action.payload));
@@ -102,31 +109,40 @@ export function useCart() {
   const isHydrated = useRef(false);
   const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
 
+  // 1. LOAD FROM STORAGE (Hydration)
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const parsed: CartItem[] = JSON.parse(stored);
-        dispatch({ type: "HYDRATE", payload: parsed });
+        const parsed = JSON.parse(stored);
+        
+        // Check if the stored data is the new object format or the old array format
+        if (parsed.items && Array.isArray(parsed.items)) {
+          dispatch({ type: "HYDRATE_ALL", payload: parsed });
+        } else if (Array.isArray(parsed)) {
+          dispatch({ type: "HYDRATE", payload: parsed });
+        }
       }
     } catch (e) {
       console.error("Cart hydration failed", e);
     } finally {
-      // CRITICAL: We only flip these after we are SURE we checked storage
       isHydrated.current = true;
       setHasLoadedFromStorage(true);
     }
   }, []);
 
+  // 2. SAVE TO STORAGE
   useEffect(() => {
+    // Prevent overwriting storage with empty state before hydration is finished
     if (!isHydrated.current || !hasLoadedFromStorage) return;
 
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+      // Save the entire state so promoCode and discountPercent persist
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
       console.error("Failed to save cart", e);
     }
-  }, [state.items, hasLoadedFromStorage]);
+  }, [state, hasLoadedFromStorage]);
 
   const totals = useMemo(
     () => computeTotals(state.items, state.discountPercent, state.promoCode),

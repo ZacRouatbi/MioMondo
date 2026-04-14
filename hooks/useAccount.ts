@@ -148,3 +148,27 @@ export const useAccount = (customerId?: string | number) => {
     isLoading: info.isLoading || orders.isLoading || wishlist.isLoading,
   };
 };
+export const useResetPassword = () => {
+  const mutation = useMutation({
+    mutationFn: async ({ token, password }: { token: string; password: string }) => {
+      const res = await fetch(`/api/auth/reset/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Échec de la réinitialisation");
+      }
+      return res.json();
+    },
+  });
+
+  return {
+    resetPassword: mutation.mutate,
+    isResetting: mutation.isPending,
+    error: mutation.error,
+    isSuccess: mutation.isSuccess,
+  };
+};

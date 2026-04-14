@@ -7,28 +7,26 @@ const SITE_LOGO_URL = `${process.env.BACKEND_URL}/wp-content/uploads/2026/04/ema
 interface ResetEmailOptions {
   to: string;
   firstName: string;
-  newPassword: string;
-  token: string;
+  token: string; // Removed newPassword
 }
- 
-function buildEmailHtml(firstName: string, newPassword: string, token: string): string {
-  const confirmUrl = `${SITE_URL}/api/auth/reset/confirm?token=${encodeURIComponent(token)}`;
- 
+
+function buildEmailHtml(firstName: string, token: string): string {
+  const resetUrl = `${SITE_URL}/reset-success?token=${encodeURIComponent(token)}`;
+
   return `
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Réinitialisation de mot de passe</title>
+  <title>Réinitialisation de votre mot de passe</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f0ece6;font-family:Georgia,serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0ece6;padding:32px 0;">
     <tr>
       <td align="center">
         <table width="620" cellpadding="0" cellspacing="0" style="max-width:620px;width:100%;background:#ffffff;border:1px solid #e0dbd4;">
- 
-          <!-- Banner -->
+
           <tr>
             <td style="padding:0;">
               <img
@@ -39,70 +37,42 @@ function buildEmailHtml(firstName: string, newPassword: string, token: string): 
               />
             </td>
           </tr>
- 
-          <!-- Body -->
+
           <tr>
             <td style="padding:40px 48px 32px;">
               <p style="margin:0 0 16px;font-size:15px;color:#1a1a2e;line-height:1.7;">
                 Bonjour <strong>${firstName}</strong>,
               </p>
-              <p style="margin:0 0 16px;font-size:15px;color:#1a1a2e;line-height:1.7;">
-                Vous avez demandé la réinitialisation de votre mot de passe sur
-                <strong>${SITE_NAME}</strong>. Cliquez sur le bouton ci-dessous
-                pour <strong>activer</strong> votre nouveau mot de passe temporaire
-                et le copier automatiquement :
+              <p style="margin:0 0 24px;font-size:15px;color:#1a1a2e;line-height:1.7;">
+                Vous avez demandé la réinitialisation de votre mot de passe sur 
+                <strong>${SITE_NAME}</strong>. Pour choisir un nouveau mot de passe, 
+                veuillez cliquer sur le bouton ci-dessous :
               </p>
- 
-              <!-- Password pill — clicking activates + copies -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin:28px 0;">
-                <tr>
-                  <td align="center">
-                    <a
-                      href="${confirmUrl}"
-                      style="display:inline-flex;align-items:center;gap:14px;background:#1a1a2e;color:#ffffff;text-decoration:none;border-radius:10px;overflow:hidden;"
-                    >
-                      <span style="font-family:Courier New,monospace;font-size:20px;font-weight:bold;letter-spacing:0.12em;padding:16px 28px;color:#ffffff;">
-                        ${newPassword}
-                      </span>
-                      <span style="background:#ffffff14;padding:16px 20px;font-family:Georgia,serif;font-size:12px;font-weight:bold;letter-spacing:0.16em;text-transform:uppercase;color:#FFCA68;border-left:1px solid #ffffff18;white-space:nowrap;">
-                        Copier &amp; Activer
-                      </span>
-                    </a>
-                  </td>
-                </tr>
-              </table>
- 
-              <p style="margin:0 0 16px;font-size:14px;color:#1a1a2e99;line-height:1.7;">
-                Ce lien est valable <strong>1 heure</strong>. Votre mot de passe actuel reste
-                inchangé tant que vous n'avez pas cliqué sur le bouton ci-dessus.
-              </p>
-              <p style="margin:0 0 16px;font-size:15px;color:#1a1a2e;line-height:1.7;">
-                Pour des raisons de sécurité, nous vous recommandons de modifier ce mot de passe
-                dès votre prochaine connexion depuis votre espace client.
-              </p>
- 
-              <!-- CTA -->
+
               <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
                 <tr>
                   <td align="center">
                     <a
-                      href="${SITE_URL}/account"
-                      style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;font-family:Georgia,serif;font-size:13px;font-weight:bold;letter-spacing:0.18em;text-transform:uppercase;padding:16px 40px;border-radius:3px;"
+                      href="${resetUrl}"
+                      style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;font-family:Georgia,serif;font-size:13px;font-weight:bold;letter-spacing:0.18em;text-transform:uppercase;padding:18px 44px;border-radius:3px;"
                     >
-                      Se connecter
+                      Réinitialiser mon mot de passe
                     </a>
                   </td>
                 </tr>
               </table>
- 
-              <p style="margin:0 0 8px;font-size:13px;color:#1a1a2e99;line-height:1.7;">
-                Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer ce message.
-                Votre mot de passe actuel restera inchangé.
+
+              <p style="margin:0 0 16px;font-size:14px;color:#1a1a2e99;line-height:1.7;">
+                Ce lien est valable <strong>1 heure</strong>. Si vous ne réinitialisez pas votre mot de passe dans ce délai, 
+                votre mot de passe actuel restera inchangé.
+              </p>
+              
+              <p style="margin:24px 0 0;font-size:13px;color:#1a1a2e99;line-height:1.7;">
+                Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité.
               </p>
             </td>
           </tr>
- 
-          <!-- Footer -->
+
           <tr>
             <td style="background:#f0ece6;padding:24px 48px;border-top:1px solid #e0dbd4;">
               <p style="margin:0 0 6px;font-size:12px;color:#1a1a2e66;line-height:1.6;">
@@ -111,14 +81,9 @@ function buildEmailHtml(firstName: string, newPassword: string, token: string): 
               <p style="margin:0 0 16px;font-size:12px;color:#1a1a2e99;font-weight:bold;">
                 L'équipe ${SITE_NAME}
               </p>
-              <p style="margin:0;font-size:11px;color:#1a1a2e44;line-height:1.7;">
-                Si vous avez reçu cet e-mail par erreur, supprimez-le simplement.
-                Vous ne recevrez aucun autre e-mail de notre part à moins d'avoir effectué
-                une demande sur <a href="${SITE_URL}" style="color:#1a1a2e66;">${SITE_URL}</a>.
-              </p>
             </td>
           </tr>
- 
+
         </table>
       </td>
     </tr>
@@ -127,8 +92,8 @@ function buildEmailHtml(firstName: string, newPassword: string, token: string): 
 </html>
   `.trim();
 }
- 
-export async function sendResetEmail({ to, firstName, newPassword, token }: ResetEmailOptions) {
+
+export async function sendResetEmail({ to, firstName, token }: Omit<ResetEmailOptions, 'newPassword'>) {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT ?? 587),
@@ -138,11 +103,11 @@ export async function sendResetEmail({ to, firstName, newPassword, token }: Rese
       pass: process.env.SMTP_PASS,
     },
   });
- 
+
   await transporter.sendMail({
     from: `"${SITE_NAME}" <${process.env.SMTP_FROM ?? process.env.SMTP_USER}>`,
     to,
-    subject: `Votre nouveau mot de passe — ${SITE_NAME}`,
-    html: buildEmailHtml(firstName, newPassword, token),
+    subject: `Réinitialisation de votre mot de passe — ${SITE_NAME}`,
+    html: buildEmailHtml(firstName, token),
   });
 }

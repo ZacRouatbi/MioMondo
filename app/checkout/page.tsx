@@ -86,9 +86,6 @@ export default function CheckoutPage() {
       router.push("/cart");
     }
   }, [isHydrated, cart.items.length, router, step]);
-
-  // Show a minimal spinner while the cart is hydrating from localStorage.
-  // This prevents a flash of the empty-cart redirect and avoids a blank page.
   if (!isHydrated) {
     return (
       <>
