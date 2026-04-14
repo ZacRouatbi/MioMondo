@@ -11,13 +11,9 @@ export function WishlistButton({ productId }: { productId: number }) {
     isAdding, 
     isRemoving 
   } = useWishlist();
-
-  // We memoize the status check to ensure it's efficient during re-renders
   const isActive = useMemo(() => {
     return wishlistItems.some((item) => Number(item.product_id) === productId);
   }, [wishlistItems, productId]);
-
-  // Combined loading state to disable the button during network activity
   const isPending = isAdding || isRemoving;
 
   const handleToggle = (e: React.MouseEvent) => {
@@ -28,11 +24,13 @@ export function WishlistButton({ productId }: { productId: number }) {
     if (isActive) {
       removeFromWishlist(productId);
     } else {
-      addToWishlist(productId);
-      console.log("ADDING PRODUCT ID:", productId);
+     
+      addToWishlist(productId);}
+      
+
       
     }
-  };
+  
 
   return (
     <button

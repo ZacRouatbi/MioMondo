@@ -14,6 +14,7 @@ import { ImageGallery } from "@/components/product/ImageGallery";
 import { StockBadge, PriceDisplay, TrustBadges } from "@/components/product/ProductDetails";
 import { WishlistButton } from "@/components/product/WishlistButton";
 import { ProductSkeleton } from "@/components/product/ProductSkeleton";
+import Footer from "@/components/layout/Footer";
 
 export default function ProductPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -71,6 +72,7 @@ export default function ProductPage() {
           </Link>
         </div>
       </div>
+      <Footer/>
     </>
   );
 
@@ -234,6 +236,7 @@ export default function ProductPage() {
           </Link>
         </div>
       </main>
+      <Footer/>
     </>
   );
 }

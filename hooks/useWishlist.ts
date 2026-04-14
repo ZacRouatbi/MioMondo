@@ -30,8 +30,7 @@ export function useWishlist() {
         body: JSON.stringify({ productId }),
       });
 
-      if (!res.ok) throw new Error("Could not add to wishlist");
-
+      if (!res.ok) throw new Error("You must be logged in to save to wishlist");
       return res.json();
     },
 
@@ -58,7 +57,7 @@ export function useWishlist() {
     },
 
     onError: (err, productId, context) => {
-      console.error("❌ ADD ERROR:", err);
+      alert(err);
       queryClient.setQueryData(["wishlist"], context?.previousWishlist);
     },
 

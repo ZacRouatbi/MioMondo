@@ -2,15 +2,18 @@ import nodemailer from "nodemailer";
 
 const SITE_NAME = process.env.SITE_NAME ?? "MioMondoHome";
 const SITE_URL = process.env.SITE_URL ?? "https://miomondohome.com";
-const SITE_LOGO_URL = `${process.env.BACKEND_URL}/wp-content/uploads/2026/04/emailBanner.png`; // replace with your actual hosted banner
+const SITE_LOGO_URL = `${process.env.BACKEND_URL}/wp-content/uploads/2026/04/emailBanner.png`;
 
 interface ResetEmailOptions {
   to: string;
   firstName: string;
   newPassword: string;
+  token: string;
 }
-
-function buildEmailHtml(firstName: string, newPassword: string): string {
+ 
+function buildEmailHtml(firstName: string, newPassword: string, token: string): string {
+  const confirmUrl = `${SITE_URL}/api/auth/reset/confirm?token=${encodeURIComponent(token)}`;
+ 
   return `
 <!DOCTYPE html>
 <html lang="fr">
@@ -24,7 +27,7 @@ function buildEmailHtml(firstName: string, newPassword: string): string {
     <tr>
       <td align="center">
         <table width="620" cellpadding="0" cellspacing="0" style="max-width:620px;width:100%;background:#ffffff;border:1px solid #e0dbd4;">
-
+ 
           <!-- Banner -->
           <tr>
             <td style="padding:0;">
@@ -36,7 +39,7 @@ function buildEmailHtml(firstName: string, newPassword: string): string {
               />
             </td>
           </tr>
-
+ 
           <!-- Body -->
           <tr>
             <td style="padding:40px 48px 32px;">
@@ -45,25 +48,39 @@ function buildEmailHtml(firstName: string, newPassword: string): string {
               </p>
               <p style="margin:0 0 16px;font-size:15px;color:#1a1a2e;line-height:1.7;">
                 Vous avez demandé la réinitialisation de votre mot de passe sur
-                <strong>${SITE_NAME}</strong>. Voici votre nouveau mot de passe temporaire :
+                <strong>${SITE_NAME}</strong>. Cliquez sur le bouton ci-dessous
+                pour <strong>activer</strong> votre nouveau mot de passe temporaire
+                et le copier automatiquement :
               </p>
-
-              <!-- Password box -->
+ 
+              <!-- Password pill — clicking activates + copies -->
               <table width="100%" cellpadding="0" cellspacing="0" style="margin:28px 0;">
                 <tr>
                   <td align="center">
-                    <div style="display:inline-block;background:#1a1a2e;color:#ffffff;font-family:Courier New,monospace;font-size:20px;font-weight:bold;letter-spacing:0.12em;padding:16px 36px;border-radius:4px;">
-                      ${newPassword}
-                    </div>
+                    <a
+                      href="${confirmUrl}"
+                      style="display:inline-flex;align-items:center;gap:14px;background:#1a1a2e;color:#ffffff;text-decoration:none;border-radius:10px;overflow:hidden;"
+                    >
+                      <span style="font-family:Courier New,monospace;font-size:20px;font-weight:bold;letter-spacing:0.12em;padding:16px 28px;color:#ffffff;">
+                        ${newPassword}
+                      </span>
+                      <span style="background:#ffffff14;padding:16px 20px;font-family:Georgia,serif;font-size:12px;font-weight:bold;letter-spacing:0.16em;text-transform:uppercase;color:#FFCA68;border-left:1px solid #ffffff18;white-space:nowrap;">
+                        Copier &amp; Activer
+                      </span>
+                    </a>
                   </td>
                 </tr>
               </table>
-
+ 
+              <p style="margin:0 0 16px;font-size:14px;color:#1a1a2e99;line-height:1.7;">
+                Ce lien est valable <strong>1 heure</strong>. Votre mot de passe actuel reste
+                inchangé tant que vous n'avez pas cliqué sur le bouton ci-dessus.
+              </p>
               <p style="margin:0 0 16px;font-size:15px;color:#1a1a2e;line-height:1.7;">
                 Pour des raisons de sécurité, nous vous recommandons de modifier ce mot de passe
                 dès votre prochaine connexion depuis votre espace client.
               </p>
-
+ 
               <!-- CTA -->
               <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
                 <tr>
@@ -77,14 +94,14 @@ function buildEmailHtml(firstName: string, newPassword: string): string {
                   </td>
                 </tr>
               </table>
-
+ 
               <p style="margin:0 0 8px;font-size:13px;color:#1a1a2e99;line-height:1.7;">
                 Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer ce message.
                 Votre mot de passe actuel restera inchangé.
               </p>
             </td>
           </tr>
-
+ 
           <!-- Footer -->
           <tr>
             <td style="background:#f0ece6;padding:24px 48px;border-top:1px solid #e0dbd4;">
@@ -101,7 +118,7 @@ function buildEmailHtml(firstName: string, newPassword: string): string {
               </p>
             </td>
           </tr>
-
+ 
         </table>
       </td>
     </tr>
@@ -110,8 +127,8 @@ function buildEmailHtml(firstName: string, newPassword: string): string {
 </html>
   `.trim();
 }
-
-export async function sendResetEmail({ to, firstName, newPassword }: ResetEmailOptions) {
+ 
+export async function sendResetEmail({ to, firstName, newPassword, token }: ResetEmailOptions) {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT ?? 587),
@@ -121,11 +138,11 @@ export async function sendResetEmail({ to, firstName, newPassword }: ResetEmailO
       pass: process.env.SMTP_PASS,
     },
   });
-
+ 
   await transporter.sendMail({
     from: `"${SITE_NAME}" <${process.env.SMTP_FROM ?? process.env.SMTP_USER}>`,
     to,
     subject: `Votre nouveau mot de passe — ${SITE_NAME}`,
-    html: buildEmailHtml(firstName, newPassword),
+    html: buildEmailHtml(firstName, newPassword, token),
   });
 }
