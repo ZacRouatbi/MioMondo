@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
-
-import {Props} from "@/types/product";
-import { productToCartItem } from "@/hooks/useProducts";
-import { useCartContext } from "../cart/CartContext";
 import Image from "next/image";
+import { Props } from "@/types/product";
+import { productToCartItem } from "@/hooks/useProducts";
+import { useCart } from "@/store/cart-store";
 
-
-export default function ProductCard({ product, variant = "default"}: Props) {
+export default function ProductCard({ product, variant = "default" }: Props) {
   const [added, setAdded] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { addItem } = useCartContext();
+  const addItem = useCart((s) => s.addItem);
+
   const handleAdd = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -40,13 +39,13 @@ export default function ProductCard({ product, variant = "default"}: Props) {
     >
       <div className={`relative aspect-square overflow-hidden ${imgBg}`}>
         <Image
-        src={product.image || "/placeholder-product.jpg"}
-        alt={product.name}
-        fill
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
-        className="object-cover transition-transform duration-700 group-hover:scale-110"
-      />
-        
+          src={product.image || "/placeholder-product.jpg"}
+          alt={product.name}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
+          className="object-cover transition-transform duration-700 group-hover:scale-110"
+        />
+
         {product.on_sale && (
           <span className="absolute top-3 left-3 bg-[#202C39] text-[#FFCA68] text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-sm z-10">
             Sale
@@ -54,15 +53,13 @@ export default function ProductCard({ product, variant = "default"}: Props) {
         )}
       </div>
 
-
       <div className="flex flex-col p-5 flex-1">
-
         <h4
           className="text-[#202C39] leading-tight mb-3 line-clamp-2 min-h-[2.8rem]"
-          style={{ 
-            fontFamily: "var(--font-display)", 
-            fontSize: "clamp(16px, 1.2vw, 18px)", 
-            fontWeight: 500 
+          style={{
+            fontFamily: "var(--font-display)",
+            fontSize: "clamp(16px, 1.2vw, 18px)",
+            fontWeight: 500,
           }}
         >
           {product.name}
@@ -72,14 +69,13 @@ export default function ProductCard({ product, variant = "default"}: Props) {
           <span className="text-[16px] font-semibold text-[#FFCA68]">
             {product.price} <span className="text-[10px] ml-0.5 uppercase opacity-80">TND</span>
           </span>
-          
+
           {product.on_sale && product.regular_price && (
             <span className="text-[13px] text-[#202C39] opacity-30 line-through font-light">
               {product.regular_price} TND
             </span>
           )}
         </div>
-
 
         <div className="mt-auto">
           <button

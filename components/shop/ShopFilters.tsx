@@ -51,7 +51,6 @@ export default function ShopFilters({ filters, onChange, isOpen, onClose }: Prop
     onChange({ categoryIds: next });
   }, [filters.categoryIds, onChange]);
 
-  // Handle price changes with a tiny debounce to prevent URL "poisoning"
   const handlePriceChange = (key: "minPrice" | "maxPrice", value: string) => {
     const numValue = value === "" ? undefined : Number(value);
     
@@ -59,7 +58,7 @@ export default function ShopFilters({ filters, onChange, isOpen, onClose }: Prop
     
     priceTimeoutRef.current = setTimeout(() => {
       onChange({ [key]: numValue });
-    }, 300); // 300ms buffer is the sweet spot for Mio Mondo's stability
+    }, 300); 
   };
 
   return (

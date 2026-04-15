@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
-import { CheckoutFormSchema } from "@/lib/validation-schemas"; // adjust path as needed
+import { CheckoutFormSchema } from "@/lib/validation-schemas";
 
 interface CheckoutFormType {
   email: string;
@@ -15,7 +15,7 @@ interface CheckoutFormType {
   city: string;
   state: string;
   postcode: string;
-  payment_method: "cod" | "card" | "konnect";
+  payment_method: "cod" | "clictopay" | "pay_sur_place";
   notes: string;
 }
 
@@ -27,15 +27,23 @@ const TN_STATES = [
   "Monastir", "Nabeul", "Sfax", "Sidi Bouzid", "Siliana", "Sousse",
   "Tataouine", "Tozeur", "Tunis", "Zaghouan",
 ];
+const shippingFieldsSchema = CheckoutFormSchema.pick({
+  email: true,
+  first_name: true,
+  last_name: true,
+  phone: true,
+  address_1: true,
+  address_2: true,
+  city: true,
+  state: true,
+  postcode: true,
+  notes: true,
+});
 
-// Validate a single field by running the full schema and picking the relevant error
 function validateField(field: keyof CheckoutFormType, form: CheckoutFormType): string | null {
-  const result = CheckoutFormSchema.safeParse({
-    ...form,
-    payment_method: form.payment_method || "cod", // satisfy schema for partial checks
-  });
+  const result = shippingFieldsSchema.safeParse(form);
   if (result.success) return null;
-  const fieldError = result.error.flatten().fieldErrors[field];
+  const fieldError = result.error.flatten().fieldErrors[field as keyof typeof shippingFieldsSchema.shape];
   return fieldError?.[0] ?? null;
 }
 
@@ -65,7 +73,6 @@ export function ShippingStep({ form, setForm, onNext }: {
   const handleChange = (field: keyof CheckoutFormType, value: string) => {
     const updated = { ...form, [field]: value };
     setForm(updated);
-    // Clear error as user types if field was already touched
     if (touched[field]) {
       const error = validateField(field, updated);
       setErrors((e) => ({ ...e, [field]: error ?? undefined }));
@@ -73,21 +80,23 @@ export function ShippingStep({ form, setForm, onNext }: {
   };
 
   const handleNext = () => {
-    // Full validation pass on click
-    const result = CheckoutFormSchema.safeParse(form);
+    const result = shippingFieldsSchema.safeParse(form);
+    setErrors({});
+
     if (!result.success) {
       const fieldErrors = result.error.flatten().fieldErrors;
-      const mapped: FieldErrors = {};
-      for (const [key, msgs] of Object.entries(fieldErrors)) {
-        mapped[key as keyof CheckoutFormType] = msgs?.[0];
+      if (Object.keys(fieldErrors).length > 0) {
+        const mapped: FieldErrors = {};
+        for (const [key, msgs] of Object.entries(fieldErrors)) {
+          mapped[key as keyof CheckoutFormType] = msgs?.[0];
+        }
+        setErrors(mapped);
+        const allTouched = Object.fromEntries(
+          Object.keys(form).map((k) => [k, true])
+        ) as Partial<Record<keyof CheckoutFormType, boolean>>;
+        setTouched(allTouched);
+        return; 
       }
-      setErrors(mapped);
-      // Mark all fields as touched so errors show
-      const allTouched = Object.fromEntries(
-        Object.keys(form).map((k) => [k, true])
-      ) as Partial<Record<keyof CheckoutFormType, boolean>>;
-      setTouched(allTouched);
-      return;
     }
     onNext();
   };
@@ -102,7 +111,6 @@ export function ShippingStep({ form, setForm, onNext }: {
       <div className="bg-white border border-[#EEEEF5] rounded-2xl p-5 sm:p-6 mb-4">
         <p className="text-[11px] font-bold tracking-widest text-neutral-400 uppercase mb-5">Informations de contact</p>
         <div className="flex flex-col gap-3.5">
-
           <div>
             <label className={labelClass}>Adresse e-mail *</label>
             <input
@@ -153,14 +161,12 @@ export function ShippingStep({ form, setForm, onNext }: {
             />
             <ErrorMsg field="phone" />
           </div>
-
         </div>
       </div>
 
       <div className="bg-white border border-[#EEEEF5] rounded-2xl p-5 sm:p-6 mb-4">
         <p className="text-[11px] font-bold tracking-widest text-neutral-400 uppercase mb-5">Adresse de livraison</p>
         <div className="flex flex-col gap-3.5">
-
           <div>
             <label className={labelClass}>Adresse *</label>
             <input
@@ -231,14 +237,13 @@ export function ShippingStep({ form, setForm, onNext }: {
             <label className={labelClass}>Note de commande</label>
             <textarea
               className={`${inputClass("notes")} resize-none h-20`}
-              placeholder="Instructions spéciales, informations de livraison…"
+              placeholder="Instructions spéciales…"
               value={form.notes}
               onChange={(e) => handleChange("notes", e.target.value)}
               onBlur={() => handleBlur("notes")}
             />
             <ErrorMsg field="notes" />
           </div>
-
         </div>
       </div>
 

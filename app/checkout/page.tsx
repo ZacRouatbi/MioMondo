@@ -7,7 +7,10 @@ import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { Lora } from "next/font/google";
-import { useCartContext } from "@/components/cart/CartContext";
+
+// ✅ ZUSTAND CART — replaces CartContext
+import { useCart, useCartHydrated } from "@/store/cart-store";
+
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { StepIndicator } from "@/components/checkout/StepIndicator";
@@ -33,15 +36,29 @@ interface CheckoutForm {
   city: string;
   state: string;
   postcode: string;
-  payment_method: "cod" | "card" | "konnect";
+  payment_method: "cod" | "clictopay" | "pay_sur_place";
   notes: string;
 }
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, clearCart, isHydrated } = useCartContext();
 
-  const [step, setStep] = useState(1);
+  // ── Zustand selectors ──────────────────────────────────────────────────────
+  const isHydrated = useCartHydrated();
+
+  const items        = useCart((s) => s.items);
+  const promoCode    = useCart((s) => s.promoCode);
+  const clear        = useCart((s) => s.clear);
+
+  // Derived values — computed inside the selector so the functions are called
+  // once per render and the result is used directly (not stored as functions).
+  const subtotal = useCart((s) => s.subtotal());
+  const discount = useCart((s) => s.discount());
+  const shipping = useCart((s) => s.shipping());
+  const total    = useCart((s) => s.total());
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const [step, setStep]       = useState(1);
   const [orderId, setOrderId] = useState<number | null>(null);
 
   const [form, setForm] = useState<CheckoutForm>({
@@ -65,27 +82,42 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          coupon: cart.promoCode,
+          coupon: promoCode || "",
+          // Only send id + quantity + variationId — never trust client-side prices
+          items: items.map((item) => ({
+            id: item.id,
+            quantity: item.quantity,
+            ...(item.variationId ? { variationId: item.variationId } : {}),
+          })),
         }),
       });
+
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message || "Erreur lors de la commande");
       }
-      return res.json() as Promise<{ order_id: number }>;
+      return res.json();
     },
+
     onSuccess: (data) => {
+      if (data.redirect_url) {
+        // ClicToPay redirect flow
+        window.location.href = data.redirect_url;
+        return;
+      }
       setOrderId(data.order_id);
       setStep(3);
-      clearCart();
     },
   });
 
+  // Redirect to cart if the store is hydrated but the cart is empty (step 1 only)
   useEffect(() => {
-    if (isHydrated && cart.items.length === 0 && step === 1) {
+    if (isHydrated && items.length === 0 && step === 1) {
       router.push("/cart");
     }
-  }, [isHydrated, cart.items.length, router, step]);
+  }, [isHydrated, items.length, router, step]);
+
+  // Show a spinner while the persisted cart is still being rehydrated
   if (!isHydrated) {
     return (
       <>
@@ -131,7 +163,7 @@ export default function CheckoutPage() {
                   <ShippingStep
                     key="shipping"
                     form={form}
-                    setForm={setForm}
+                    setForm={(updatedForm: any) => setForm(updatedForm)}
                     onNext={() => setStep(2)}
                   />
                 )}
@@ -139,7 +171,7 @@ export default function CheckoutPage() {
                   <PaymentStep
                     key="payment"
                     form={form}
-                    setForm={setForm}
+                    setForm={(updatedForm: any) => setForm(updatedForm)}
                     onBack={() => setStep(1)}
                     onPlace={() => placeMutation.mutate()}
                     isPlacing={placeMutation.isPending}
@@ -149,7 +181,10 @@ export default function CheckoutPage() {
                   <ConfirmationStep
                     key="confirmation"
                     orderId={orderId}
-                    onContinue={() => router.push("/products")}
+                    paymentMethod={form.payment_method}
+                    onContinue={() => {
+                      clear();
+                      router.push("/products")}}
                   />
                 )}
               </AnimatePresence>
@@ -174,18 +209,18 @@ export default function CheckoutPage() {
             {step < 3 && (
               <div className="w-full lg:w-[340px] shrink-0 lg:sticky lg:top-[80px]">
                 <OrderSummary
-                  items={cart.items.map((item) => ({
+                  items={items.map((item) => ({
                     id: item.id,
                     name: item.name,
                     image: item.image,
                     quantity: item.quantity,
                     price: item.price,
                   }))}
-                  subtotal={cart.subtotal}
-                  discount={cart.discount}
-                  shipping={cart.shipping}
-                  total={cart.total}
-                  promoCode={cart.promoCode}
+                  subtotal={subtotal}
+                  discount={discount}
+                  shipping={shipping}
+                  total={total}
+                  promoCode={promoCode}
                 />
               </div>
             )}

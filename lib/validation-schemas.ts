@@ -1,3 +1,4 @@
+import { strict } from 'assert/strict';
 import { z } from 'zod';
 const TN_STATES = [
   "Ariana", "Béja", "Ben Arous", "Bizerte", "Gabès", "Gafsa", "Jendouba",
@@ -5,6 +6,12 @@ const TN_STATES = [
   "Monastir", "Nabeul", "Sfax", "Sidi Bouzid", "Siliana", "Sousse",
   "Tataouine", "Tozeur", "Tunis", "Zaghouan",
 ];
+export const CartItemSchema = z.object({
+  id: z.number().int().positive(),
+  variationId: z.number().int().positive().optional(),
+  quantity: z.number().int().min(1, "Minimum 1 article").max(20, "Maximum 20 articles par ligne"),
+}).strict();
+export const CartItemsSchema = z.array(CartItemSchema).min(1, "Votre panier est vide");
 export const CheckoutFormSchema = z.object({
   email: z
     .string()
@@ -64,7 +71,7 @@ export const CheckoutFormSchema = z.object({
 
   payment_method: z
     .string()
-    .refine((val) => ["cod", "card", "konnect"].includes(val)),
+    .refine((val) => ["cod", "clictopay", "pay_sur_place"].includes(val)),
 
   notes: z
     .string()
@@ -78,17 +85,12 @@ export const CheckoutFormSchema = z.object({
     .toUpperCase()
     .max(20)
     .regex(/^[A-Z0-9]*$/)
-    .optional(),
-}).strict();
-export const CartItemSchema = z.object({
-  id: z.number().int().positive(),
-
-  variationId: z.number().int().positive().optional(),
-
-  quantity: z.number().int().min(1).max(1000),
+    .nullable() // Allows null
+    .optional() // Allows undefined
+    .or(z.literal("")), // Allows ""
+  items: CartItemsSchema,
 }).strict();
 
-export const CartItemsSchema = z.array(CartItemSchema).min(1);
 export const PromoCodeSchema = z.object({
   code: z
     .string()
@@ -120,6 +122,8 @@ export const CustomerInfoSchema = z.object({
 
   city: z.string().trim().max(50).optional(),
 }).strict();
+
+
 export type CheckoutForm = z.infer<typeof CheckoutFormSchema>;
 export type CartItem = z.infer<typeof CartItemSchema>;
 export type PromoCode = z.infer<typeof PromoCodeSchema>;

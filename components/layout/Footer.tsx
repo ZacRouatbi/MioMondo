@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react"; // Added
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-// Update these imports to match your actual auth state hooks
 import { useUser } from "@/hooks/useUser"; 
 import { useAuthModal } from "@/components/ui/auth/AuthModalContext"; 
+import PrivacyModal from "@/components/ui/footer/PrivacyModal";
+import TermsModal from "@/components/ui/footer/TermsModal";
 
 const LINKS = [
   {
@@ -37,9 +39,13 @@ const LINKS = [
 ];
 
 export default function Footer() {
- const router = useRouter();
+  const router = useRouter();
   const { data: session } = useUser();
   const { openAuthModal } = useAuthModal();
+
+  // Modal States
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   const handleAccountLink = (e: React.MouseEvent, slug: string) => {
     e.preventDefault();
@@ -48,6 +54,18 @@ export default function Footer() {
     } else {
       openAuthModal();
     }
+  };
+
+  // Logic to intercept Enterprise links
+  const handleEnterpriseLink = (e: React.MouseEvent, slug: string) => {
+    if (slug === "privacy") {
+      e.preventDefault();
+      setShowPrivacy(true);
+    } else if (slug === "terms") {
+      e.preventDefault();
+      setShowTerms(true);
+    }
+    // contact and returns will follow standard link behavior
   };
 
   return (
@@ -82,7 +100,6 @@ export default function Footer() {
                   const isShop = col === "Shop";
                   const isEnterprise = col === "Entreprise";
 
-                  // Logic for "Votre Compte" (Auth Guard)
                   if (isAccount) {
                     return (
                       <li key={idx}>
@@ -97,7 +114,6 @@ export default function Footer() {
                     );
                   }
 
-                  // Standard Logic for other columns
                   let href = "#";
                   if (isShop) href = `/products?category=${item.slug}`;
                   if (isEnterprise) href = `/${item.slug}`;
@@ -106,6 +122,7 @@ export default function Footer() {
                     <li key={idx}>
                       <Link
                         href={href}
+                        onClick={(e) => isEnterprise && handleEnterpriseLink(e, item.slug)}
                         className="text-snow opacity-40 hover:opacity-100 transition-opacity duration-200"
                         style={{ fontSize: "clamp(13px,1vw,15px)" }}
                       >
@@ -133,6 +150,10 @@ export default function Footer() {
           </div>
         </div>
       </div>
+
+      {/* Render Modals */}
+      <PrivacyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
+      <TermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
     </footer>
   );
 }

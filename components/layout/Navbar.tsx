@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation"; // Added for routing
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
-import Link from "next/link"; // Changed from <a> to Link for better performance
+import Link from "next/link";
 import AuthModal from "./../ui/auth/AuthModal";
 import SearchModal from "./../ui/SearchModal";
 import { useUser } from "@/hooks/useUser";
-import { useCartContext } from "../cart/CartContext";
 import { useAuthModal } from "../ui/auth/AuthModalContext";
+import { useCart } from "@/store/cart-store";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -19,20 +19,21 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const router = useRouter();
+  
+  // --- State ---
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  // Modals State (Removed isProfileOpen as it's no longer a dropdown)
-  const { isAuthModalOpen, setIsAuthModalOpen } = useAuthModal();
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false); // Fix for Hydration Error
 
+  const { isAuthModalOpen, setIsAuthModalOpen } = useAuthModal();
   const { data: session } = useUser();
+  const itemCount = useCart((s) => s.itemCount());
 
-  // Cart count from context
-  const { itemCount } = useCartContext();
-
-  // Handle scroll effect
+  // Handle Mount and Scroll logic
   useEffect(() => {
+    setMounted(true); // Signal that we are now on the client
+    
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -49,7 +50,6 @@ export default function Navbar() {
 
   const handleAccountClick = () => {
     if (session?.authenticated) {
-      // Direct route instead of toggling state
       router.push('/account');
     } else {
       setIsAuthModalOpen(true);
@@ -110,7 +110,6 @@ export default function Navbar() {
 
             {/* ── Right: Icons ── */}
             <div className="flex items-center justify-end gap-5 xl:gap-7">
-
               <button
                 onClick={() => setIsSearchModalOpen(true)}
                 className="flex items-center justify-center w-8 h-8 flex-shrink-0 text-jet opacity-60 hover:text-[#FFCA68] hover:opacity-100 transition-all duration-300 hover:scale-110 outline-none"
@@ -121,7 +120,6 @@ export default function Navbar() {
                 </svg>
               </button>
 
-              {/* Account / Profile Trigger */}
               <div className="relative flex-shrink-0">
                 <button
                   onClick={handleAccountClick}
@@ -139,11 +137,11 @@ export default function Navbar() {
                 </button>
               </div>
 
-              {/* ── Cart icon with live count ── */}
+              {/* ── Cart icon with hydration fix ── */}
               <Link
                 href="/cart"
                 className="relative flex items-center justify-center w-8 h-8 flex-shrink-0 text-jet opacity-60 hover:text-[#FFCA68] hover:opacity-100 transition-all duration-300 hover:scale-110"
-                aria-label={`Cart — ${itemCount} item${itemCount !== 1 ? "s" : ""}`}
+                aria-label={`Cart — ${mounted ? itemCount : 0} items`}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-5 h-5 aspect-square">
                   <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
@@ -151,36 +149,28 @@ export default function Navbar() {
                   <path d="M16 10a4 4 0 0 1-8 0" />
                 </svg>
 
-                {itemCount > 0 && (
+                {/* Only render actual count once we know we are on the client */}
+                {mounted && itemCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-[#FFCA68] text-jet text-[9px] font-bold w-[17px] h-[17px] rounded-full flex items-center justify-center shadow-sm">
                     {itemCount > 99 ? "99+" : itemCount}
                   </span>
                 )}
               </Link>
             </div>
-
           </div>
         </div>
       </header>
 
-      {/* ── Modals Area ── */}
+      {/* ── Modals & Mobile Drawer (Same as before) ── */}
       <AnimatePresence mode="wait">
         {isSearchModalOpen && (
-          <SearchModal
-            isOpen={isSearchModalOpen}
-            onClose={() => setIsSearchModalOpen(false)}
-          />
+          <SearchModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} />
         )}
-
         {isAuthModalOpen && (
-          <AuthModal
-            isOpen={isAuthModalOpen}
-            onClose={() => setIsAuthModalOpen(false)}
-          />
+          <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
         )}
       </AnimatePresence>
 
-      {/* ── Mobile Drawer ── */}
       <div
         className={`fixed inset-0 z-[300] bg-snow flex flex-col p-10 gap-8 transition-transform duration-500 ease-in-out ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"

@@ -6,7 +6,8 @@ export type RouteType =
   | "checkout"
   | "coupon"
   | "login"
-  | "account";
+  | "account"
+  | "settings";
 
 export interface RoutePolicy {
   limit: number;
@@ -40,6 +41,11 @@ export const ROUTE_POLICIES: Record<RouteType, RoutePolicy> = {
     limit: 5,
     windowSec: 60,
     mode: "strict",
+  },
+  settings: {
+    limit: 15,        // Allows for navigation & refreshes
+    windowSec: 150,   // 2.5 minute window
+    mode: "normal",   // Normal mode avoids aggressive blacklisting
   },
 
   checkout: {

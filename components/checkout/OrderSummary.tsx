@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronDown, Truck, ShieldCheck, RotateCcw } from "lucide-react";
 
 export function OrderSummary({ items, subtotal, discount, shipping, total, promoCode }: {
-  items: Array<{ id: number; name: string; image: string | null; quantity: number; price: number }>;
+  items: Array<{ id: number; name: string; image?: string | null; quantity: number; price: number }>;
   subtotal: number;
   discount: number;
   shipping: number;
@@ -54,8 +54,6 @@ export function OrderSummary({ items, subtotal, discount, shipping, total, promo
               </div>
             ))}
           </div>
-
-
 
           {/* Totals */}
           <div className="flex flex-col gap-2 border-t border-[#EEEEF5] pt-4">
