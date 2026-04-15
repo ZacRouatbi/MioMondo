@@ -8,7 +8,7 @@ import { useAuthModal } from "@/components/ui/auth/AuthModalContext";
 import PrivacyModal from "@/components/ui/footer/PrivacyModal";
 import TermsModal from "@/components/ui/footer/TermsModal";
 import ContactModal from "../ui/footer/ContactModal";
-
+import ReturnsModal from "@/components/ui/footer/ReturnsModal";
 const LINKS = [
   {
     col: "Shop",
@@ -48,6 +48,7 @@ export default function Footer() {
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [showContact, setShowContact] = useState(false);
+  const [showReturns, setShowReturns] = useState(false);
   const handleAccountLink = (e: React.MouseEvent, slug: string) => {
     e.preventDefault();
     if (session?.authenticated) {
@@ -68,6 +69,10 @@ export default function Footer() {
   } else if (slug === "contact") { // Add this
     e.preventDefault();
     setShowContact(true);
+  }
+  else if (slug === "returns") {
+    e.preventDefault();
+    setShowReturns(true);
   }
 };
 
@@ -170,6 +175,7 @@ export default function Footer() {
       <PrivacyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
       <TermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
       <ContactModal isOpen={showContact} onClose={() => setShowContact(false)} />
+      <ReturnsModal isOpen={showReturns} onClose={() => setShowReturns(false)} />
     </footer>
   );
 }

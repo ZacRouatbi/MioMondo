@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, MapPin, Phone, Mail, Clock, ExternalLink } from "lucide-react";
+import { X, MapPin, Phone, Clock, ExternalLink } from "lucide-react";
 import { Lora } from "next/font/google";
 
 const lora = Lora({ subsets: ["latin"], weight: ["400", "500"] });
@@ -34,14 +34,14 @@ export default function ContactModal({ isOpen, onClose }: Props) {
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-5xl bg-snow rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
           >
-            {/* Header */}
+            {/* Header — Fixed with new Typo style */}
             <div className="p-6 md:p-8 border-b border-jet/5 flex items-center justify-between bg-white">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-[#FFCA68]/20 flex items-center justify-center">
                   <MapPin size={24} className="text-jet" />
                 </div>
                 <h2 className={`${lora.className} text-2xl text-jet font-medium`}>
-                  Contactez Mio Mondo
+                  Contactez <em className="text-[#FFCA68]">Mio Mondo</em>
                 </h2>
               </div>
               <button onClick={onClose} className="p-3 hover:bg-jet/5 rounded-full transition-colors">
@@ -53,7 +53,7 @@ export default function ContactModal({ isOpen, onClose }: Props) {
             <div className="overflow-y-auto flex-1 bg-white">
               <div className="grid grid-cols-1 md:grid-cols-2">
                 
-                {/* Left: Info Section */}
+                {/* Left: Info Section - Card Feeling Restored */}
                 <div className="p-8 lg:p-12 space-y-6">
                   
                   {/* Address Card */}
@@ -73,7 +73,7 @@ export default function ContactModal({ isOpen, onClose }: Props) {
                     <h3 className="text-jet font-bold text-[10px] uppercase tracking-widest mb-4 flex items-center gap-2">
                       <Phone size={14} className="text-[#FFCA68]" /> Téléphone
                     </h3>
-                    <p className="text-[14px] text-jet font-medium">+216 73 273 241</p>
+                    <p className="text-[14px] text-jet font-medium">+216 53 773 241</p>
                   </div>
 
                   {/* Hours Card */}
@@ -104,7 +104,7 @@ export default function ContactModal({ isOpen, onClose }: Props) {
                   </a>
                 </div>
 
-                {/* Right: Map Section with Padding */}
+                {/* Right: Map Section - Kept exactly as provided */}
                 <div className="p-4 md:p-8 md:pl-0 h-[450px] md:h-auto">
                   <div className="w-full h-full rounded-2xl overflow-hidden border border-jet/5 shadow-inner relative group">
                     <iframe 
