@@ -21,6 +21,10 @@ export default function CartPage() {
   const total = useCart((s) => s.total());
   const promoCode = useCart((s) => s.promoCode);
   const updateItemsMetadata = useCart((s) => s.updateItemsMetadata);
+  
+  // Dynamic Settings
+  const threshold = useCart((s) => s.freeShippingThreshold);
+  const setShippingSettings = useCart((s) => s.setShippingSettings);
 
   const isHydrated = useCartHydrated();
 
@@ -32,7 +36,31 @@ export default function CartPage() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const { scrollYProgress } = useScroll();
 
-  // ✅ Sync cart with backend after hydration
+  useEffect(() => {
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        useCart.persist.rehydrate();
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch("/api/settings"); // Your new API
+        const data = await res.json();
+        if (data.rate !== undefined) {
+          setShippingSettings(data.rate, data.threshold);
+        }
+      } catch (e) {
+        console.error("Failed to sync shipping settings:", e);
+      }
+    };
+    fetchSettings();
+  }, [setShippingSettings]);
+
   useEffect(() => {
     if (!isHydrated || items.length === 0) return;
 
@@ -51,7 +79,7 @@ export default function CartPage() {
     };
 
     fetchProducts();
-  }, [isHydrated, items.length]);
+  }, [isHydrated, items.length, updateItemsMetadata]);
 
   // --- HANDLERS ---
   const handlePromoChange = (val: string) => {
@@ -120,13 +148,32 @@ export default function CartPage() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-useEffect(() => {
+
+  // --- PREVENT FLICKER ---
   if (!isHydrated) {
-    useCart.getState()._setHydrated();
-  }
-}, []);
-  
-  
+  return (
+    <>
+      <Navbar />
+      <main className="w-full min-h-screen bg-snow">
+        <div className="border-b border-[#1a1a2e]/8 px-8 md:px-16 py-10">
+          <p className="uppercase text-[#1a1a2e]/40 text-[10px] font-semibold tracking-[0.26em] mb-3">
+            Your Selection
+          </p>
+          <h1
+            className="font-display font-light text-[#1a1a2e] leading-[1.06]"
+            style={{ fontSize: "clamp(2.2rem, 4vw, 3.6rem)" }}
+          >
+            Shopping <em className="italic">Cart</em>
+          </h1>
+        </div>
+        <div className="flex items-center justify-center py-32">
+          <div className="w-6 h-6 border-2 border-jet border-t-transparent rounded-full animate-spin" />
+        </div>
+      </main>
+      <Footer />
+    </>
+  );
+}
 
   return (
     <>
@@ -257,7 +304,7 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* RIGHT — ORDER SUMMARY (UNCHANGED) */}
+            {/* RIGHT — ORDER SUMMARY */}
             <div className="lg:border-l border-[#1a1a2e]/8 bg-[#F0ECE6] px-8 py-12 lg:min-h-[calc(100vh-130px)] flex flex-col gap-8">
               <div>
                 <p className="uppercase text-[#1a1a2e]/40 text-[10px] font-semibold tracking-[0.26em] mb-6">
@@ -280,7 +327,7 @@ useEffect(() => {
                     <span>Shipping</span>
                     <span>
                       {shipping === 0 ? (
-                        <span className="text-[#1a1a2e]/40 text-[12px] tracking-wide">Free</span>
+                        <span className="text-[#1a1a2e]/40 text-[12px] tracking-wide font-medium">Free</span>
                       ) : (
                         `${shipping.toFixed(2)} TND`
                       )}
@@ -289,7 +336,7 @@ useEffect(() => {
 
                   {shipping > 0 && (
                     <p className="text-[11px] text-[#1a1a2e]/35 leading-relaxed">
-                      Free shipping on orders over 300 TND
+                      Free shipping on orders over {threshold} TND
                     </p>
                   )}
 
@@ -305,7 +352,7 @@ useEffect(() => {
                 </div>
               </div>
 
-              {/* Promo code (UNCHANGED) */}
+              {/* Promo code */}
               <div>
                 <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#1a1a2e]/40 mb-3">
                   Promo Code

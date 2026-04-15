@@ -4,7 +4,10 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useProduct } from "@/hooks/useProduct";
-import { useCartContext } from "@/components/cart/CartContext";
+
+// ✅ SWAPPED TO ZUSTAND
+import { useCart } from "@/store/cart-store"; 
+
 import { productToCartItem } from "@/hooks/useProducts";
 import Navbar from "@/components/layout/Navbar";
 import MarqueeBanner from "@/components/layout/MarqueeBanner";
@@ -19,7 +22,10 @@ import Footer from "@/components/layout/Footer";
 export default function ProductPage() {
   const { slug } = useParams<{ slug: string }>();
   const { data: product, isLoading, error } = useProduct(slug);
-  const { addItem } = useCartContext();
+
+  // ── Zustand selector ──────────────────────────────────────────────────────
+  const addItem = useCart((s) => s.addItem);
+  // ──────────────────────────────────────────────────────────────────────────
 
   const [added, setAdded] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
@@ -28,6 +34,7 @@ export default function ProductPage() {
     if (!product || addingToCart) return;
     setAddingToCart(true);
     try {
+      // Logic unchanged, just using the new store action
       addItem(productToCartItem(product as any));
       setAdded(true);
       setTimeout(() => setAdded(false), 2500);
@@ -108,16 +115,12 @@ export default function ProductPage() {
           </div>
         </div>
 
-        {/* ── Main content ── */}
         <div className="max-w-7xl mx-auto px-5 lg:px-10 py-8 lg:py-14">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 xl:gap-24">
 
-            {/* ── LEFT: Gallery ── */}
             <ImageGallery images={gallery} />
 
-            {/* ── RIGHT: Product info ── */}
             <div className="flex flex-col gap-6">
-              {/* Category + badges */}
               <div className="flex items-center gap-2.5 flex-wrap">
                 {product.categories.map((cat) => (
                   <Link
@@ -135,19 +138,16 @@ export default function ProductPage() {
                 )}
               </div>
 
-              {/* Product name */}
               <h1 className="font-display text-3xl lg:text-4xl xl:text-5xl font-light text-jet leading-tight">
                 {product.name}
               </h1>
 
-              {/* SKU */}
               {product.sku && (
                 <p className="text-xs text-jet/30 font-medium tracking-widest uppercase">
                   Réf. {product.sku}
                 </p>
               )}
 
-              {/* Price */}
               <PriceDisplay
                 price={product.price}
                 regular_price={product.regular_price}
@@ -156,7 +156,6 @@ export default function ProductPage() {
 
               <div className="h-px bg-[#E6E6FA]" />
 
-              {/* Short description */}
               {product.short_description && (
                 <div
                   className="text-sm leading-relaxed text-jet/60 prose prose-sm max-w-none
@@ -169,7 +168,6 @@ export default function ProductPage() {
 
               <div className="h-px bg-[#E6E6FA]" />
 
-              {/* Add to cart / Wishlist */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={handleAddToCart}
@@ -218,7 +216,6 @@ export default function ProductPage() {
           </div>
         </div>
 
-        {/* ── Back link ── */}
         <div className="max-w-7xl mx-auto px-5 lg:px-10 pb-16">
           <div className="h-px bg-[#E6E6FA] mb-10" />
           <Link

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
-import { useShallow } from "zustand/react/shallow"; // Import useShallow
+import { useShallow } from "zustand/react/shallow"; 
 
 import ProductCard from "@/components/shop/ProductCard";
 import { fetchBestsellers } from "@/hooks/useBestsellers";
@@ -16,12 +16,7 @@ const PAGE_SIZE = 4;
 
 export default function BestSellers() {
   const [page, setPage] = useState(0);
-
-  // 1. Get the addItem function (stable reference)
   const addItem = useCart((s) => s.addItem);
-
-  // 2. Fix: Use useShallow to prevent the "getServerSnapshot" infinite loop 
-  // by ensuring the Set is only treated as "new" if the item IDs actually change.
   const cartIds = useCart(
     useShallow((s) => new Set(s.items.map((i) => i.id)))
   );
@@ -35,13 +30,12 @@ export default function BestSellers() {
     queryFn: fetchBestsellers,
   });
 
-  // Derived state calculations
   const pageCount = products ? Math.ceil(products.length / PAGE_SIZE) : 0;
   const visible = products
     ? products.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE)
     : [];
 
-  // Animation variants
+
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.08 } },

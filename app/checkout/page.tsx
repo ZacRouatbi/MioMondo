@@ -56,11 +56,9 @@ export default function CheckoutPage() {
   const discount = useCart((s) => s.discount());
   const shipping = useCart((s) => s.shipping());
   const total    = useCart((s) => s.total());
-  // ──────────────────────────────────────────────────────────────────────────
-
   const [step, setStep]       = useState(1);
   const [orderId, setOrderId] = useState<number | null>(null);
-
+  const [orderComplete, setOrderComplete] = useState(false);
   const [form, setForm] = useState<CheckoutForm>({
     email: "",
     first_name: "",
@@ -99,25 +97,32 @@ export default function CheckoutPage() {
       return res.json();
     },
 
-    onSuccess: (data) => {
-      if (data.redirect_url) {
-        // ClicToPay redirect flow
-        window.location.href = data.redirect_url;
-        return;
-      }
-      setOrderId(data.order_id);
-      setStep(3);
-    },
-  });
-
-  // Redirect to cart if the store is hydrated but the cart is empty (step 1 only)
-  useEffect(() => {
-    if (isHydrated && items.length === 0 && step === 1) {
-      router.push("/cart");
+      onSuccess: (data) => {
+    if (data.redirect_url) {
+      clear();
+      window.location.href = data.redirect_url;
+      return;
     }
-  }, [isHydrated, items.length, router, step]);
-
-  // Show a spinner while the persisted cart is still being rehydrated
+    setOrderId(data.order_id);
+    setOrderComplete(true);     
+    setStep(3);
+    
+  },
+  });
+useEffect(() => {
+  const handlePageShow = (e: PageTransitionEvent) => {
+    if (e.persisted) {
+      useCart.persist.rehydrate();
+    }
+  };
+  window.addEventListener("pageshow", handlePageShow);
+  return () => window.removeEventListener("pageshow", handlePageShow);
+}, []);
+  useEffect(() => {
+  if (isHydrated && items.length === 0 && step === 1 && !orderComplete) {
+    router.push("/cart");
+  }
+}, [isHydrated, items.length, router, step, orderComplete]);
   if (!isHydrated) {
     return (
       <>
@@ -183,7 +188,7 @@ export default function CheckoutPage() {
                     orderId={orderId}
                     paymentMethod={form.payment_method}
                     onContinue={() => {
-                      clear();
+                      
                       router.push("/products")}}
                   />
                 )}

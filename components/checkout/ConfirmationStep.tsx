@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { MapPin, Clock, Truck, MessageCircle } from "lucide-react";
-
+import { useCart } from "@/store/cart-store";
 interface Props {
   orderId: number;
   onContinue: () => void;
@@ -14,10 +14,11 @@ interface Props {
 export function ConfirmationStep({ orderId, onContinue, paymentMethod }: Props) {
   const isPickup = paymentMethod === "pay_sur_place";
   const [timeLeft, setTimeLeft] = useState("02:00:00");
-
-  // Simple countdown logic for the 2-hour window
+  const clear = useCart((s) => s.clear);
   useEffect(() => {
     if (!isPickup) return;
+    clear(); 
+     
     
     const target = new Date().getTime() + 2 * 60 * 60 * 1000;
     
@@ -61,7 +62,6 @@ export function ConfirmationStep({ orderId, onContinue, paymentMethod }: Props) 
           Merci pour votre confiance. Votre commande <span className="font-bold text-jet">#{orderId}</span> est en cours de préparation.
         </p>
 
-        {/* Conditional "Pay Sur Place" Alert */}
         {isPickup && (
           <motion.div 
             initial={{ y: 10, opacity: 0 }} 
@@ -124,7 +124,7 @@ export function ConfirmationStep({ orderId, onContinue, paymentMethod }: Props) 
         
         {isPickup && (
           <a 
-            href="https://goo.gl/maps/your-actual-link-here" 
+            href="https://maps.app.goo.gl/1GxLpTf5zipBiTaSA" 
             target="_blank" 
             className="inline-block mt-6 text-[11px] text-[#FFCA68] font-bold underline underline-offset-4 hover:text-jet transition-colors"
           >

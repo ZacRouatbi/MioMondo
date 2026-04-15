@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -18,13 +19,16 @@ type CartState = {
   items: CartItem[];
   promoCode: string | null;
   discountPercent: number;
-  _hydrated: boolean;
-  _setHydrated: () => void;
+  shippingRate: number;
+  freeShippingThreshold: number;
+
+  // Update settings from API
+  setShippingSettings: (rate: number, threshold: number) => void;
 
   addItem: (item: CartItem) => void;
   removeItem: (id: number, variationId?: number) => void;
   updateQty: (id: number, qty: number, variationId?: number) => void;
-  updateItemsMetadata: (serverProducts: any[]) => void; // ✅ Added to Type
+  updateItemsMetadata: (serverProducts: any[]) => void;
 
   applyPromo: (code: string, discount: number) => void;
   removePromo: () => void;
@@ -37,17 +41,17 @@ type CartState = {
   total: () => number;
 };
 
-const FREE_SHIPPING_THRESHOLD = 300;
-const SHIPPING_RATE = 15;
-
 export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
       promoCode: null,
       discountPercent: 0,
-      _hydrated: false,
-      _setHydrated: () => set({ _hydrated: true }),
+      shippingRate: 7, 
+      freeShippingThreshold: 300,
+
+      setShippingSettings: (rate, threshold) => 
+        set({ shippingRate: rate, freeShippingThreshold: threshold }),
 
       addItem: (item) =>
         set((state) => {
@@ -66,6 +70,7 @@ export const useCart = create<CartState>()(
               ),
             };
           }
+
           return { items: [...state.items, item] };
         }),
 
@@ -73,7 +78,10 @@ export const useCart = create<CartState>()(
         set((state) => ({
           items: state.items.filter(
             (i) =>
-              !(i.id === id && (i.variationId ?? null) === (variationId ?? null))
+              !(
+                i.id === id &&
+                (i.variationId ?? null) === (variationId ?? null)
+              )
           ),
         })),
 
@@ -83,50 +91,58 @@ export const useCart = create<CartState>()(
             qty <= 0
               ? state.items.filter(
                   (i) =>
-                    !(i.id === id && (i.variationId ?? null) === (variationId ?? null))
+                    !(
+                      i.id === id &&
+                      (i.variationId ?? null) === (variationId ?? null)
+                    )
                 )
               : state.items.map((i) =>
-                  i.id === id && (i.variationId ?? null) === (variationId ?? null)
+                  i.id === id &&
+                  (i.variationId ?? null) === (variationId ?? null)
                     ? { ...i, quantity: qty }
                     : i
                 ),
         })),
 
-      // ✅ Correctly placed inside the state object
-      updateItemsMetadata: (serverProducts: any[]) => {
+      updateItemsMetadata: (serverProducts) =>
         set((state) => ({
           items: state.items.map((localItem) => {
-            const freshData = serverProducts.find((p) => p.id === localItem.id);
-            if (freshData) {
-              return {
-                ...localItem,
-                price: Number(freshData.price), // Ensure it stays a number
-                name: freshData.name,
-                image: freshData.image,
-              };
-            }
-            return localItem;
+            const fresh = serverProducts.find((p) => p.id === localItem.id);
+            if (!fresh) return localItem;
+
+            return {
+              ...localItem,
+              price: Number(fresh.price),
+              name: fresh.name,
+              image: fresh.image,
+            };
           }),
-        }));
-      },
+        })),
 
       applyPromo: (code, discount) =>
-        set(() => ({
+        set({
           promoCode: code,
           discountPercent: discount,
-        })),
+        }),
 
       removePromo: () =>
-        set(() => ({
+        set({
           promoCode: null,
           discountPercent: 0,
-        })),
+        }),
 
-      clear: () => set({ items: [], promoCode: null, discountPercent: 0 }),
+      clear: () =>
+        set({
+          items: [],
+          promoCode: null,
+          discountPercent: 0,
+        }),
 
-      itemCount: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
+      itemCount: () =>
+        get().items.reduce((sum, i) => sum + i.quantity, 0),
 
-      subtotal: () => get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+      subtotal: () =>
+        get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
 
       discount: () => {
         const subtotal = get().subtotal();
@@ -136,8 +152,14 @@ export const useCart = create<CartState>()(
       },
 
       shipping: () => {
-        const after = get().subtotal() - get().discount();
-        return after >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_RATE;
+        const currentSubtotal = get().subtotal() - get().discount();
+        const threshold = get().freeShippingThreshold;
+        const rate = get().shippingRate;
+
+        // If cart is empty, shipping is 0
+        if (get().items.length === 0) return 0;
+        
+        return currentSubtotal >= threshold ? 0 : rate;
       },
 
       total: () => {
@@ -148,14 +170,20 @@ export const useCart = create<CartState>()(
       },
     }),
     {
-      name: "mm_cart",
-      onRehydrateStorage: () => (state, error) => {
-        if (state) state._setHydrated();
-      },
+      name: "mm_cart", 
+
     }
   )
 );
 
 export function useCartHydrated() {
-  return useCart((s) => s._hydrated);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const unsub = useCart.persist.onFinishHydration(() => setHydrated(true));
+    if (useCart.persist.hasHydrated()) setHydrated(true);
+    return unsub;
+  }, []);
+
+  return hydrated;
 }

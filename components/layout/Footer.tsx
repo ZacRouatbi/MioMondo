@@ -7,6 +7,7 @@ import { useUser } from "@/hooks/useUser";
 import { useAuthModal } from "@/components/ui/auth/AuthModalContext"; 
 import PrivacyModal from "@/components/ui/footer/PrivacyModal";
 import TermsModal from "@/components/ui/footer/TermsModal";
+import ContactModal from "../ui/footer/ContactModal";
 
 const LINKS = [
   {
@@ -43,10 +44,10 @@ export default function Footer() {
   const { data: session } = useUser();
   const { openAuthModal } = useAuthModal();
 
-  // Modal States
+
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-
+  const [showContact, setShowContact] = useState(false);
   const handleAccountLink = (e: React.MouseEvent, slug: string) => {
     e.preventDefault();
     if (session?.authenticated) {
@@ -56,17 +57,19 @@ export default function Footer() {
     }
   };
 
-  // Logic to intercept Enterprise links
-  const handleEnterpriseLink = (e: React.MouseEvent, slug: string) => {
-    if (slug === "privacy") {
-      e.preventDefault();
-      setShowPrivacy(true);
-    } else if (slug === "terms") {
-      e.preventDefault();
-      setShowTerms(true);
-    }
-    // contact and returns will follow standard link behavior
-  };
+
+ const handleEnterpriseLink = (e: React.MouseEvent, slug: string) => {
+  if (slug === "privacy") {
+    e.preventDefault();
+    setShowPrivacy(true);
+  } else if (slug === "terms") {
+    e.preventDefault();
+    setShowTerms(true);
+  } else if (slug === "contact") { // Add this
+    e.preventDefault();
+    setShowContact(true);
+  }
+};
 
   return (
     <footer className="bg-jet text-snow">
@@ -83,8 +86,8 @@ export default function Footer() {
               Your home décor boutique in Sousse. Style, quality and passion since 2018.
             </p>
             <p className="text-gold opacity-80 leading-[2]" style={{ fontSize: "clamp(12px,0.9vw,14px)" }}>
-              📍 Blvd 14 Janvier, Medina City, Sousse<br />
-              📞 +216 73 273 241
+              📍  Boulevard 14 janvier, 2011 route touristique khezama, Sousse<br />
+              📞 +216 53 773 241
             </p>
           </div>
 
@@ -137,23 +140,36 @@ export default function Footer() {
         </div>
 
         {/* Footer Bottom */}
-        <div className="flex flex-wrap items-center justify-between gap-4 py-6">
-          <p className="text-snow opacity-25" style={{ fontSize: 12 }}>
-            © 2026 Mio Mondo Home. All rights reserved. Made with ❤️ by <span className="text-[#FFCA68]">Brand</span>box agency.
-          </p>
-          <div className="flex gap-6">
-            {["Facebook", "Instagram", "TikTok"].map(s => (
-              <a key={s} href="#" className="text-snow opacity-35 hover:text-gold hover:opacity-100 transition-all duration-200" style={{ fontSize: 12, letterSpacing: "0.04em" }}>
-                {s}
-              </a>
-            ))}
-          </div>
-        </div>
+{/* Footer Bottom */}
+<div className="flex flex-wrap items-center justify-between gap-4 py-6">
+  <p className="text-snow opacity-25" style={{ fontSize: 12 }}>
+    © 2026 Mio Mondo Home. All rights reserved. Made with ❤️ by <span className="text-[#FFCA68]">Brand</span>box agency.
+  </p>
+  <div className="flex gap-6">
+    {[
+      { label: "Facebook", href: "https://www.facebook.com/miomondo.home1/" },
+      { label: "Instagram", href: "https://www.instagram.com/miomondo.home/" },
+      { label: "TikTok", href: "https://www.tiktok.com/@miomondohome" },
+    ].map((social) => (
+      <a 
+        key={social.label} 
+        href={social.href}
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="text-snow opacity-35 hover:text-gold hover:opacity-100 transition-all duration-200" 
+        style={{ fontSize: 12, letterSpacing: "0.04em" }}
+      >
+        {social.label}
+      </a>
+    ))}
+  </div>
+</div>
       </div>
 
       {/* Render Modals */}
       <PrivacyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
       <TermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
+      <ContactModal isOpen={showContact} onClose={() => setShowContact(false)} />
     </footer>
   );
 }
