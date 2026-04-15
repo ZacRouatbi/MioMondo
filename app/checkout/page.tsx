@@ -8,9 +8,7 @@ import { AnimatePresence } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { Lora } from "next/font/google";
 
-// ✅ ZUSTAND CART — replaces CartContext
 import { useCart, useCartHydrated } from "@/store/cart-store";
-
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { StepIndicator } from "@/components/checkout/StepIndicator";
@@ -42,23 +40,24 @@ interface CheckoutForm {
 
 export default function CheckoutPage() {
   const router = useRouter();
-
-  // ── Zustand selectors ──────────────────────────────────────────────────────
   const isHydrated = useCartHydrated();
 
-  const items        = useCart((s) => s.items);
-  const promoCode    = useCart((s) => s.promoCode);
-  const clear        = useCart((s) => s.clear);
+  const items = useCart((s) => s.items);
+  const promoCode = useCart((s) => s.promoCode);
+  const clear = useCart((s) => s.clear);
+  
+  // --- NEW: Grab the setter from store ---
+  const setPaymentMethodStore = useCart((s) => s.setPaymentMethod);
 
-  // Derived values — computed inside the selector so the functions are called
-  // once per render and the result is used directly (not stored as functions).
   const subtotal = useCart((s) => s.subtotal());
   const discount = useCart((s) => s.discount());
   const shipping = useCart((s) => s.shipping());
-  const total    = useCart((s) => s.total());
-  const [step, setStep]       = useState(1);
+  const total = useCart((s) => s.total());
+
+  const [step, setStep] = useState(1);
   const [orderId, setOrderId] = useState<number | null>(null);
   const [orderComplete, setOrderComplete] = useState(false);
+  
   const [form, setForm] = useState<CheckoutForm>({
     email: "",
     first_name: "",
@@ -73,6 +72,11 @@ export default function CheckoutPage() {
     notes: "",
   });
 
+  // --- NEW: Sync store whenever form payment method changes ---
+  useEffect(() => {
+    setPaymentMethodStore(form.payment_method);
+  }, [form.payment_method, setPaymentMethodStore]);
+
   const placeMutation = useMutation({
     mutationFn: async () => {
       const res = await fetch("/api/checkout/place-order", {
@@ -81,7 +85,6 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           ...form,
           coupon: promoCode || "",
-          // Only send id + quantity + variationId — never trust client-side prices
           items: items.map((item) => ({
             id: item.id,
             quantity: item.quantity,
@@ -97,32 +100,37 @@ export default function CheckoutPage() {
       return res.json();
     },
 
-      onSuccess: (data) => {
-    if (data.redirect_url) {
-      clear();
-      window.location.href = data.redirect_url;
-      return;
-    }
-    setOrderId(data.order_id);
-    setOrderComplete(true);     
-    setStep(3);
-    
-  },
+    onSuccess: (data) => {
+      if (data.redirect_url) {
+        clear();
+        window.location.href = data.redirect_url;
+        return;
+      }
+      setOrderId(data.order_id);
+      setOrderComplete(true);     
+      setStep(3);
+      clear(); // Clear cart on success
+    },
   });
-useEffect(() => {
-  const handlePageShow = (e: PageTransitionEvent) => {
-    if (e.persisted) {
-      useCart.persist.rehydrate();
-    }
-  };
-  window.addEventListener("pageshow", handlePageShow);
-  return () => window.removeEventListener("pageshow", handlePageShow);
-}, []);
+
+  // Persistence handling
   useEffect(() => {
-  if (isHydrated && items.length === 0 && step === 1 && !orderComplete) {
-    router.push("/cart");
-  }
-}, [isHydrated, items.length, router, step, orderComplete]);
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        useCart.persist.rehydrate();
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
+  // Empty cart redirect
+  useEffect(() => {
+    if (isHydrated && items.length === 0 && step === 1 && !orderComplete) {
+      router.push("/cart");
+    }
+  }, [isHydrated, items.length, router, step, orderComplete]);
+
   if (!isHydrated) {
     return (
       <>
@@ -138,10 +146,9 @@ useEffect(() => {
   return (
     <>
       <Navbar />
-
       <div className="min-h-screen bg-[#F8F8F8]">
         <div className="max-w-[1100px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
-
+          
           <nav className="flex items-center gap-1.5 text-[11px] text-neutral-300 tracking-widest uppercase mb-6">
             <Link href="/" className="hover:text-jet transition-colors">Accueil</Link>
             <ChevronRight size={10} />
@@ -151,12 +158,8 @@ useEffect(() => {
           </nav>
 
           <h1 className={`${lora.className} mb-6 sm:mb-8`}>
-            <span className="text-[28px] sm:text-[36px] font-normal text-jet tracking-tight">
-              Finaliser
-            </span>{" "}
-            <em className="text-[28px] sm:text-[36px] font-normal text-[#FFCA68] italic">
-              la commande
-            </em>
+            <span className="text-[28px] sm:text-[36px] font-normal text-jet tracking-tight">Finaliser</span>{" "}
+            <em className="text-[28px] sm:text-[36px] font-normal text-[#FFCA68] italic">la commande</em>
           </h1>
 
           {step < 3 && <StepIndicator step={step} />}
@@ -168,7 +171,7 @@ useEffect(() => {
                   <ShippingStep
                     key="shipping"
                     form={form}
-                    setForm={(updatedForm: any) => setForm(updatedForm)}
+                    setForm={setForm}
                     onNext={() => setStep(2)}
                   />
                 )}
@@ -176,7 +179,7 @@ useEffect(() => {
                   <PaymentStep
                     key="payment"
                     form={form}
-                    setForm={(updatedForm: any) => setForm(updatedForm)}
+                    setForm={setForm}
                     onBack={() => setStep(1)}
                     onPlace={() => placeMutation.mutate()}
                     isPlacing={placeMutation.isPending}
@@ -187,9 +190,7 @@ useEffect(() => {
                     key="confirmation"
                     orderId={orderId}
                     paymentMethod={form.payment_method}
-                    onContinue={() => {
-                      
-                      router.push("/products")}}
+                    onContinue={() => router.push("/products")}
                   />
                 )}
               </AnimatePresence>
@@ -201,10 +202,7 @@ useEffect(() => {
               )}
 
               {step < 3 && (
-                <Link
-                  href="/cart"
-                  className="mt-4 inline-flex items-center gap-1.5 text-[12px] text-neutral-400 hover:text-jet transition-colors"
-                >
+                <Link href="/cart" className="mt-4 inline-flex items-center gap-1.5 text-[12px] text-neutral-400 hover:text-jet transition-colors">
                   <ChevronRight size={12} className="rotate-180" />
                   Retour au panier
                 </Link>
@@ -214,13 +212,7 @@ useEffect(() => {
             {step < 3 && (
               <div className="w-full lg:w-[340px] shrink-0 lg:sticky lg:top-[80px]">
                 <OrderSummary
-                  items={items.map((item) => ({
-                    id: item.id,
-                    name: item.name,
-                    image: item.image,
-                    quantity: item.quantity,
-                    price: item.price,
-                  }))}
+                  items={items}
                   subtotal={subtotal}
                   discount={discount}
                   shipping={shipping}
@@ -232,7 +224,6 @@ useEffect(() => {
           </div>
         </div>
       </div>
-
       <Footer />
     </>
   );

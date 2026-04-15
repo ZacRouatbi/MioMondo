@@ -21,19 +21,20 @@ type CartState = {
   discountPercent: number;
   shippingRate: number;
   freeShippingThreshold: number;
+  // --- NEW STATE ---
+  paymentMethod: string; 
 
-  // Update settings from API
   setShippingSettings: (rate: number, threshold: number) => void;
+  // --- NEW ACTION ---
+  setPaymentMethod: (method: string) => void; 
 
   addItem: (item: CartItem) => void;
   removeItem: (id: number, variationId?: number) => void;
   updateQty: (id: number, qty: number, variationId?: number) => void;
   updateItemsMetadata: (serverProducts: any[]) => void;
-
   applyPromo: (code: string, discount: number) => void;
   removePromo: () => void;
   clear: () => void;
-
   itemCount: () => number;
   subtotal: () => number;
   discount: () => number;
@@ -49,9 +50,14 @@ export const useCart = create<CartState>()(
       discountPercent: 0,
       shippingRate: 7, 
       freeShippingThreshold: 300,
+      // Default payment method
+      paymentMethod: "cod", 
 
       setShippingSettings: (rate, threshold) => 
         set({ shippingRate: rate, freeShippingThreshold: threshold }),
+
+      // Action to update payment method from Checkout form
+      setPaymentMethod: (method) => set({ paymentMethod: method }),
 
       addItem: (item) =>
         set((state) => {
@@ -60,7 +66,6 @@ export const useCart = create<CartState>()(
               i.id === item.id &&
               (i.variationId ?? null) === (item.variationId ?? null)
           );
-
           if (existing) {
             return {
               items: state.items.map((i) =>
@@ -70,7 +75,6 @@ export const useCart = create<CartState>()(
               ),
             };
           }
-
           return { items: [...state.items, item] };
         }),
 
@@ -78,10 +82,7 @@ export const useCart = create<CartState>()(
         set((state) => ({
           items: state.items.filter(
             (i) =>
-              !(
-                i.id === id &&
-                (i.variationId ?? null) === (variationId ?? null)
-              )
+              !(i.id === id && (i.variationId ?? null) === (variationId ?? null))
           ),
         })),
 
@@ -91,14 +92,10 @@ export const useCart = create<CartState>()(
             qty <= 0
               ? state.items.filter(
                   (i) =>
-                    !(
-                      i.id === id &&
-                      (i.variationId ?? null) === (variationId ?? null)
-                    )
+                    !(i.id === id && (i.variationId ?? null) === (variationId ?? null))
                 )
               : state.items.map((i) =>
-                  i.id === id &&
-                  (i.variationId ?? null) === (variationId ?? null)
+                  i.id === id && (i.variationId ?? null) === (variationId ?? null)
                     ? { ...i, quantity: qty }
                     : i
                 ),
@@ -109,7 +106,6 @@ export const useCart = create<CartState>()(
           items: state.items.map((localItem) => {
             const fresh = serverProducts.find((p) => p.id === localItem.id);
             if (!fresh) return localItem;
-
             return {
               ...localItem,
               price: Number(fresh.price),
@@ -120,22 +116,17 @@ export const useCart = create<CartState>()(
         })),
 
       applyPromo: (code, discount) =>
-        set({
-          promoCode: code,
-          discountPercent: discount,
-        }),
+        set({ promoCode: code, discountPercent: discount }),
 
       removePromo: () =>
-        set({
-          promoCode: null,
-          discountPercent: 0,
-        }),
+        set({ promoCode: null, discountPercent: 0 }),
 
       clear: () =>
         set({
           items: [],
           promoCode: null,
           discountPercent: 0,
+          paymentMethod: "cod",
         }),
 
       itemCount: () =>
@@ -152,11 +143,17 @@ export const useCart = create<CartState>()(
       },
 
       shipping: () => {
+        // --- LOGIC MIRRORING THE API ---
+        const method = get().paymentMethod;
+        
+        // 1. If paying/picking up on site, shipping is ALWAYS 0
+        if (method === "pay_sur_place") return 0;
+
+        // 2. Standard threshold logic
         const currentSubtotal = get().subtotal() - get().discount();
         const threshold = get().freeShippingThreshold;
         const rate = get().shippingRate;
 
-        // If cart is empty, shipping is 0
         if (get().items.length === 0) return 0;
         
         return currentSubtotal >= threshold ? 0 : rate;
@@ -171,19 +168,16 @@ export const useCart = create<CartState>()(
     }),
     {
       name: "mm_cart", 
-
     }
   )
 );
 
 export function useCartHydrated() {
   const [hydrated, setHydrated] = useState(false);
-
   useEffect(() => {
     const unsub = useCart.persist.onFinishHydration(() => setHydrated(true));
     if (useCart.persist.hasHydrated()) setHydrated(true);
     return unsub;
   }, []);
-
   return hydrated;
 }
