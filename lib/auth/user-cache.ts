@@ -4,7 +4,10 @@ const CACHE_TTL = 60 * 10;
 
 export async function getCachedUser(token: string) {
   const key = `auth:user:${token}`;
-  const cached = await redis.get(key);
+  
+  // Use ?. to safely call .get()
+  const cached = await redis?.get(key);
+  
   if (cached) {
     return JSON.parse(cached);
   }
@@ -15,5 +18,6 @@ export async function getCachedUser(token: string) {
 export async function setCachedUser(token: string, user: any) {
   const key = `auth:user:${token}`;
 
-  await redis.set(key, JSON.stringify(user), "EX", CACHE_TTL);
+  // Only call .set() if redis exists
+  await redis?.set(key, JSON.stringify(user), "EX", CACHE_TTL);
 }

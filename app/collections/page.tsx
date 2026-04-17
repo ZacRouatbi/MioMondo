@@ -11,7 +11,7 @@ const collections = [
     id: "salle-de-bain",
     title: "Salle de Bain",
     slug: "salle-de-bain",
-    imageSrc: "/SalleDe bain.jpg",
+    imageSrc: "/salle-de-bain.jpg",
   },
   {
     id: "cuisine",

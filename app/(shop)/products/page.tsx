@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ProductFilters } from "@/types/product";
 import {
@@ -23,7 +23,8 @@ const DEFAULT_FILTERS: ProductFilters = {
   search: "",
 };
 
-export default function ProductsPage() {
+// 1. New internal component to handle the logic
+function ProductsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { tree } = useCategoryTree();
@@ -34,8 +35,6 @@ export default function ProductsPage() {
   const page = parseInt(searchParams.get("page") ?? "1", 10);
   const categoryQuery = searchParams.get("category");
 
-  // 1. REACTIVE URL SYNC
-  // This updates the filter whenever the URL category changes (e.g., from footer links)
   useEffect(() => {
     if (tree.length > 0 && categoryQuery) {
       const node = tree.find((n) => n.slug === categoryQuery);
@@ -61,8 +60,6 @@ export default function ProductsPage() {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("page");
 
-      // If we manually change categories, remove the slug from the URL
-      // This prevents the useEffect above from "locking" the state to a single category
       if (patch.categoryIds) {
         params.delete("category");
       }
@@ -120,10 +117,7 @@ export default function ProductsPage() {
   const hasActiveFilters = filters.categoryIds.length > 0 || filters.onSaleOnly || filters.inStockOnly;
 
   return (
-    <div className="min-h-screen bg-snow">
-      <MarqueeBanner />
-      <Navbar />
-      
+    <>
       <CollectionHero activeTopLevel={activeTopLevel} />
 
       <div className="sticky top-0 z-30 bg-snow border-b border-[#E6E6FA]/60 shadow-sm">
@@ -145,11 +139,11 @@ export default function ProductsPage() {
                 hasActiveFilters ? "bg-jet text-white border-jet" : "bg-white text-jet border-[#E6E6FA] hover:bg-[#E6E6FA]/30"
               }`}
             >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <line x1="4" y1="6" x2="20" y2="6" />
-            <line x1="4" y1="12" x2="14" y2="12" />
-            <line x1="4" y1="18" x2="8" y2="18" />
-          </svg>
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="4" y1="6" x2="20" y2="6" />
+                <line x1="4" y1="12" x2="14" y2="12" />
+                <line x1="4" y1="18" x2="8" y2="18" />
+              </svg>
               Filtres
             </button>
 
@@ -208,6 +202,23 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
+    </>
+  );
+}
+export default function ProductsPage() {
+  return (
+    <div className="min-h-screen bg-snow">
+      <MarqueeBanner />
+      <Navbar />
+      
+      <Suspense fallback={
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <div className="animate-pulse text-jet/20 font-medium">Chargement de la boutique...</div>
+        </div>
+      }>
+        <ProductsContent />
+      </Suspense>
+
       <Footer />
     </div>
   );

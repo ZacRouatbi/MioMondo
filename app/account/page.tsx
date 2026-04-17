@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/hooks/useUser";
@@ -67,7 +67,7 @@ const NAV_ITEMS: { id: TabType; label: string; shortLabel: string; icon: React.R
   },
 ];
 
-export default function AccountPage() {
+function AccountContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, isLoading: isAuthLoading } = useUser();
@@ -104,18 +104,9 @@ export default function AccountPage() {
   if (!session?.authenticated || !customerId) return null;
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&display=swap');
-        .mobile-nav-scroll::-webkit-scrollbar { display: none; }
-        .mobile-nav-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
-
-      <MarqueeBanner />
-      <Navbar />
+    <>
       <AccountHero tab={activeTab} />
 
-      {/* ── Mobile tab bar (below hero, above content, not sticky) ── */}
       <div className="md:hidden bg-[#FAFAFA] border-b border-[#EEEEF5]">
         <div className="mobile-nav-scroll flex overflow-x-auto">
           {NAV_ITEMS.map((item) => {
@@ -148,10 +139,7 @@ export default function AccountPage() {
         </div>
       </div>
 
-      {/* ── Main layout ── */}
       <div className="max-w-[1100px] mx-auto px-4 sm:px-5 py-6 sm:py-10 pb-16 sm:pb-20 flex flex-col md:flex-row gap-6 md:gap-8 items-start">
-
-        {/* Desktop sidebar — hidden on mobile */}
         <aside className="hidden md:block w-[220px] shrink-0 sticky top-[100px]">
           <nav className="flex flex-col gap-0.5">
             {NAV_ITEMS.map((item) => {
@@ -186,7 +174,6 @@ export default function AccountPage() {
           </nav>
         </aside>
 
-        {/* Content area */}
         <main className="flex-1 min-w-0 w-full">
           <AnimatePresence mode="wait">
             <motion.div
@@ -204,6 +191,25 @@ export default function AccountPage() {
           </AnimatePresence>
         </main>
       </div>
+    </>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <div className="min-h-screen bg-[#FAFAFA]">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&display=swap');
+        .mobile-nav-scroll::-webkit-scrollbar { display: none; }
+        .mobile-nav-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+
+      <MarqueeBanner />
+      <Navbar />
+      
+      <Suspense fallback={<LoadingScreen />}>
+        <AccountContent />
+      </Suspense>
 
       <Footer />
     </div>

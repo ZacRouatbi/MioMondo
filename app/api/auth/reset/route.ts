@@ -51,17 +51,12 @@ export async function POST(req: Request) {
     }
 
     const customer = customers[0];
-
-    // --- SECURITY ADDITION ---
-    // We capture the current modification date. 
-    // If the password changes, this date will change in WooCommerce, 
-    // making the token "mismatch" and therefore invalid.
     const lastModified = customer.date_modified;
 
     const token = await new SignJWT({
       customerId: customer.id,
       email,
-      lastModified, // Included in payload
+      lastModified, 
     })
       .setProtectedHeader({ alg: "HS256" })
       .setExpirationTime("1h")

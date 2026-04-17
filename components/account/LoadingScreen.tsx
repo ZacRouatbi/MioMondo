@@ -1,25 +1,26 @@
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
 export default function LoadingScreen() {
-  const containerVariants = {
+  const containerVariants: Variants = {
     initial: { opacity: 0 },
     animate: { opacity: 1 },
   };
 
-  const dotVariants = {
+  const dotVariants: Variants = {
     initial: { y: 0, opacity: 0.4 },
-    animate: {
+    animate: (i: number) => ({
       y: [-10, 10, -10],
       opacity: [0.4, 1, 0.4],
       transition: {
         duration: 2.5,
         ease: "easeInOut",
         repeat: Infinity,
+        delay: i * 0.15, 
       },
-    },
+    }),
   };
 
-  const textVariants = {
+  const textVariants: Variants = {
     initial: { opacity: 0, y: 10 },
     animate: {
       opacity: 1,
@@ -46,11 +47,9 @@ export default function LoadingScreen() {
               key={i}
               className="w-3 h-3 rounded-full bg-gradient-to-b from-[#FFCA68] to-[#202C39]"
               variants={dotVariants}
+              custom={i} // Pass index to variant for the stagger delay
               initial="initial"
               animate="animate"
-              transition={{
-                delay: i * 0.15,
-              }}
             />
           ))}
         </div>

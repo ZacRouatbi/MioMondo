@@ -50,7 +50,10 @@ export default function InfoTab({ customerId }: { customerId: number }) {
   };
 
   if (info.isLoading) {
-    return <div className="p-10 text-center text-neutral-400 text-[14px]">Chargement…</div>;
+    <div className="p-20 text-center">
+        <div className="w-8 h-8 border-2 border-[#FFCA68] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-neutral-400 text-[14px] font-medium tracking-wide">Chargement de vos informations…</p>
+      </div>
   }
 
   const inputClass =

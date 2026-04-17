@@ -130,6 +130,7 @@ export default function Footer() {
                     <li key={idx}>
                       <Link
                         href={href}
+                        prefetch={false}
                         onClick={(e) => isEnterprise && handleEnterpriseLink(e, item.slug)}
                         className="text-snow opacity-40 hover:opacity-100 transition-opacity duration-200"
                         style={{ fontSize: "clamp(13px,1vw,15px)" }}

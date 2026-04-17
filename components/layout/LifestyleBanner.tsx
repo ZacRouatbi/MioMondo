@@ -1,10 +1,6 @@
 import Image from "next/image";
 export default function LifestyleBanner() {
   return (
-    /*
-      Full-width 50/50 split — no inner wrapper so both panels bleed edge-to-edge.
-      Text panel uses .inner-style padding so it matches other sections.
-    */
     <section className="grid grid-cols-1 md:grid-cols-2" style={{ minHeight: "clamp(320px, 44vw, 600px)" }}>
 
       {/* Text panel */}
@@ -46,7 +42,7 @@ export default function LifestyleBanner() {
       {/* Image — fills remaining half */}
      <div className="relative overflow-hidden w-full h-full min-h-[300px] md:min-h-0">
   <Image
-    src="/lifestyleBanner.png"
+    src="/lifestylebanner.png"
     alt="Mio Mondo lifestyle"
     fill
     sizes="(max-width: 768px) 100vw, 50vw"
