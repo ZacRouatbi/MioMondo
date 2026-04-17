@@ -1,8 +1,8 @@
-import { Redis } from "ioredis";
-
-const redis = new Redis(process.env.REDIS_URL!);
+import { redis } from "../redis";
 
 export async function getCache(key: string) {
+  if (!redis) return null;
+
   try {
     const data = await redis.get(key);
     return data ? JSON.parse(data) : null;
@@ -16,6 +16,8 @@ export async function setCache(
   value: any,
   ttlSeconds = 3600
 ) {
+  if (!redis) return;
+
   try {
     await redis.set(
       key,

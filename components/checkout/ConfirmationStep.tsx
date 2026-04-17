@@ -95,7 +95,7 @@ export function ConfirmationStep({ orderId, onContinue, paymentMethod }: Props) 
             },
             { 
               label: "Besoin d'aide ?", 
-              value: "+216 73 273 241", 
+              value: "+216 53 773 241", 
               icon: <MessageCircle size={18}/> 
             },
           ].map(({ label, value, icon }, idx) => (

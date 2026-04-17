@@ -5,8 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/hooks/useUser";
 import { useAuth } from "@/hooks/useAuth";
-
-// Components
 import Navbar from "@/components/layout/Navbar";
 import LoadingScreen from "@/components/account/LoadingScreen";
 import MarqueeBanner from "@/components/layout/MarqueeBanner";
@@ -15,9 +13,6 @@ import AccountHero, { TabType } from "@/components/account/AccountHero";
 import OrdersTab from "@/components/account/OrdersTab";
 import InfoTab from "@/components/account/InfoTab";
 import WishlistTab from "@/components/account/WishlistTab";
-import PaymentTab from "@/components/account/PaymentTab";
-
-// Icons
 import { LogOut } from "lucide-react";
 
 const NAV_ITEMS: { id: TabType; label: string; shortLabel: string; icon: React.ReactNode }[] = [
@@ -54,17 +49,6 @@ const NAV_ITEMS: { id: TabType; label: string; shortLabel: string; icon: React.R
       </svg>
     ),
   },
-  {
-    id: "payment",
-    label: "Moyens de Paiement",
-    shortLabel: "Paiement",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-        <rect x="1" y="4" width="22" height="16" rx="2" />
-        <line x1="1" y1="10" x2="23" y2="10" />
-      </svg>
-    ),
-  },
 ];
 
 function AccountContent() {
@@ -80,7 +64,7 @@ function AccountContent() {
 
   useEffect(() => {
     const view = searchParams.get("view") as TabType;
-    const validTabs: TabType[] = ["orders", "info", "wishlist", "payment"];
+    const validTabs: TabType[] = ["orders", "info", "wishlist"];
     if (view && validTabs.includes(view)) setActiveTab(view);
   }, [searchParams]);
 
@@ -186,7 +170,7 @@ function AccountContent() {
               {activeTab === "orders"   && <OrdersTab   customerId={customerId} />}
               {activeTab === "info"     && <InfoTab     customerId={customerId} />}
               {activeTab === "wishlist" && <WishlistTab  customerId={customerId} />}
-              {activeTab === "payment"  && <PaymentTab  />}
+           
             </motion.div>
           </AnimatePresence>
         </main>

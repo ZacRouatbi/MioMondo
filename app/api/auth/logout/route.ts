@@ -9,7 +9,7 @@ export async function POST() {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/",
-      maxAge: 0 // Set to Jan 1, 1970
+      maxAge: 0 
     });
 
     return NextResponse.json({ 

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { rateLimitRequest } from "./rate-limit";
+import { rateLimitRequest } from "./rate-limit";  // ✅ matches the exported function name
 import { ROUTE_POLICIES, RouteType } from "./policies";
 
 export async function secureRequest(
@@ -8,7 +8,7 @@ export async function secureRequest(
 ) {
   const policy = ROUTE_POLICIES[routeType];
 
-  // 1. Apply rate limiting (core system)
+  // 1. Apply rate limiting
   const rateResult = await rateLimitRequest(
     request,
     policy.limit,

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { secureRequest } from "@/lib/core/gateway";
 import { CheckoutFormSchema } from "@/lib/validation-schemas";
 import { getTunisiaShippingSettings } from "@/lib/wc-settings"; // Import helper
-
+import { getCustomerIdFromToken } from "@/lib/auth-utils";
 const WC_URL = process.env.WC_URL!;
 const WC_KEY = process.env.WC_KEY!;
 const WC_SECRET = process.env.WC_SECRET!;
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     
     // 1. Fetch live shipping rules from WooCommerce Settings
     const shippingSettings = await getTunisiaShippingSettings();
-
+    const customerId = await getCustomerIdFromToken(req);
     // 2. Fetch products to calculate subtotal
     const productIds = data.items.map((i) => i.id).join(",");
     const productsRes = await fetch(`${WC_URL}/wp-json/wc/v3/products?include=${productIds}`, {
@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
       payment_method: data.payment_method,
       payment_method_title: data.payment_method === "cod" ? "Paiement à la livraison" : 
                             data.payment_method === "clictopay" ? "Carte Bancaire" : "Paiement sur place",
+                            ...(customerId ? { customer_id: customerId } : {}),
       billing: { ...data, country: "TN" },
       shipping: { ...data, country: "TN" },
       line_items: lineItems,

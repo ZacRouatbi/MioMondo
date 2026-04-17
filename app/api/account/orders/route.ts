@@ -15,7 +15,6 @@ function wcAuth() {
 
 export async function GET(req: NextRequest) {
   try {
-    // 🚦 GATEWAY (rate limit protection)
     const gateway = await secureRequest(req as any, "account");
     if (!gateway.ok) {
       return NextResponse.json(
@@ -26,6 +25,7 @@ export async function GET(req: NextRequest) {
 
     // 🔐 AUTH
     const customerId = await getCustomerIdFromToken(req);
+    console.log("customerId from token:", customerId);
     if (!customerId) {
       return NextResponse.json(
         { error: "Unauthorized" },
