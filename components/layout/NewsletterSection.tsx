@@ -50,7 +50,7 @@ export default function NewsletterSection() {
         {status === "success" ? (
           <div className="flex flex-col items-center gap-3 animate-in fade-in slide-in-from-bottom-4">
             <CheckCircle2 className="text-[#FFCA68]" size={40} strokeWidth={1} />
-            <p className="text-jet text-xl font-light">Please check your inbox to confirm.</p>
+            <p className="text-jet text-xl font-light">Thank you for following us !</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="mt-10 max-w-lg mx-auto relative">
